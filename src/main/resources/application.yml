@@ -1,0 +1,94 @@
+#server:
+#  port: 8080
+#  servlet:
+#    context-path: /
+#    session:
+#      timeout: 1800
+
+logging:
+  level:
+    com:
+      amazonaws:
+        util:
+          EC2MetadataUtils: error
+    org:
+      hibernate:
+        SQL: debug
+        type:
+          descriptor:
+            sql: trace
+      springframework:
+        orm:
+          jpa: DEBUG
+        transaction: DEBUG
+
+spring:
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+  mustache:
+    cache: false
+  thymeleaf:
+    prefix: classpath:templates/
+    suffix: .html
+    cache: false
+  datasource:
+    hikari:
+      connection-test-query: SELECT NOW() FROM dual
+      connection-timeout: 30000
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+      idle-timeout: 600000
+      jdbc-url: jdbc:log4jdbc:mysql://{db-hostname}/{db-name}?serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&allowMultiQueries=true
+      max-lifetime: 1800000
+      maximum-pool-size: 10
+      minimum-idle: 1
+      username: { db-uesrname }
+      password: { db-password }
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 30MB
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+      naming:
+        #implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl
+        #physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        physical-strategy: com.jewelry.config.strategy.CustomCamelCaseToUnderscoresNamingStrategy
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+        use_sql_comments: false
+  redis:
+    port: 6379
+    host: 127.0.0.1
+
+cloud:
+  aws:
+    region:
+      static: { aws-region-static }
+    s3:
+      bucket:
+        name: { bucket-name }
+        region: {bucket-region}
+      iam:
+        accesskey: { accesskey }
+        secretkey: { secretkey }
+      path: { s3-path }
+    stack:
+      auto: false
+
+
+jwt:
+  header: Authorization
+  secret: { jwt-secret }
+  access-token-validity-in-seconds: 1800
+  refresh-token-validity-in-seconds: 1296000  #15일
+  value:
+    authorization: Authorization
+    grant: Bearer
+

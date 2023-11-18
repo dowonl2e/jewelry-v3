@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>로그인</title>
+
+    <!-- Custom fonts for this template-->
+    <script th:src="@{/vendor/jquery/jquery.js}" type="text/javascript"></script>
+    <script th:src="@{/js/common/common.js}" type="text/javascript"></script>
+    <link th:href="@{/vendor/fontawesome-free/css/all.min.css}" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link th:href="@{/css/sb-admin-2.min.css}" rel="stylesheet">
+
+</head>
+<body class="bg-gradient-primary">
+
+    <div class="container">
+
+        <!-- Outer Row -->
+        <div class="row justify-content-center">
+
+            <div class="col-xl-10 col-lg-12 col-md-9">
+
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <!-- Nested Row within Card Body -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="p-5">
+                                    <div class="text-center">
+                                        <h1 class="h4 text-gray-900 mb-4">로그인</h1>
+                                    </div>
+                                    <form id="form" class="user">
+                                        <div class="form-group">
+                                            <input type="text" id="user_id" class="form-control form-control-user" aria-describedby="emailHelp" placeholder="ID" onchange="fncCheckEng(this);">
+                                        </div>
+                                        <div class="form-group">
+                                            <input type="password" id="user_pwd" class="form-control form-control-user" placeholder="Password">
+                                        </div>
+                                        <a href="javascript:void(0)" onclick="fncLogin(); return false;" id="loginBtn" class="btn btn-primary btn-user btn-block"> 로그인 </a>
+                                    </form>
+                                    <hr>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+      $(document).ready(function(){
+        $("#user_id").focus();
+        $("input").keydown(function(key) {
+          if(key.keyCode == 13) {
+            $("#loginBtn").click();
+          }
+        });
+      });
+
+			function fncLogin(){
+				const form = document.getElementById('form');
+				if( form.user_id.value == '' ){
+					alert('아이디를 입력해주세요.');
+					return false;
+				}
+
+				if( form.user_pwd.value == '' ){
+					alert('비밀번호를 입력해주세요.');
+					return false;
+				}
+
+				const params = {
+					user_id : form.user_id.value,
+					user_pwd : form.user_pwd.value
+				};
+
+				fetch('/api/jauth/login', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(params)
+				}).then(response => {
+					if(response == 'undefined' || response.status == 'undefined'){
+						throw new Error('Request Failed...');
+					}
+					return response.json();
+				}).then(json => {
+					if(json.status == '200'){
+						setLocalStorage("access_token", json.data.accessToken);
+						setLocalStorage("access_token_expiores_in", json.data.accessTokenExpioresIn);
+						goPage('/main');
+					}
+					else {
+						alert(json.message);
+					}
+        }).catch(error => {
+            alert('오류가 발생하였습니다.');
+				});
+			}
+
+			function fncCheckEng(obj){
+				if($(obj).val() != ''){
+					const regex = /^[a-z|A-Z]+$/;
+					if(!regex.test($(obj).val())){
+						alert('영문만 입력해주세요.');
+						$(obj).val('');
+					}
+				}
+			}
+		/*]]>*/
+  </script>
+</body>
+</html>

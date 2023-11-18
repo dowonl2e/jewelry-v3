@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">거래처 결제 등록</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal">
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col width="20%;"/>
+              <col width="40%;"/>
+              <col width="40%;"/>
+            </colgroup>
+            <tbody class="border-bottom">
+            <tr>
+              <th rowspan="2" class="border-right">관리매장<span class="important"> *</span></th>
+              <th class="border-right">등록일<span class="important"> *</span></th>
+              <th>매장<span class="important"> *</span></th>
+            </tr>
+            <tr>
+              <td class="border-right"><input type="date" name="regDt" id="regDt" class="form-control form-data mtb5" maxlength="10"/></td>
+              <td>
+                <select id="storeCd" class="form-control">
+                  <option th:each="cditem : ${stlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th class="border-right">제조사<span class="important"> *</span></th>
+              <td colspan="2">
+                <input type="hidden" name="venderNo" id="venderNo_0" class="form-data"/>
+                <div class="input-group-append">
+                  <input type="text" name="venderNm" id="venderNm_0" class="form-control mtb5 beadcnt" readonly="readonly"/>
+                  <i class="fas fa-search fa-sm ml5 mt15" onclick="fncVenderListPop('0'); return false;"></i>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="border-right">결제 예정</th>
+              <th class="border-right">순금 결제 중량</th>
+              <th>공임 결제 금액</th>
+            </tr>
+            <tr>
+              <td class="border-right"><input type="number" name="exptGoldGram" id="exptGoldGram" class="form-control form-data mtb5"/></td>
+              <td><input type="number" name="exptPayPrice" id="exptPayPrice" class="form-control form-data mtb5"/></td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="border-right">결제 진행</th>
+              <th class="border-right">순금 결제 중량</th>
+              <th>공임 결제 금액</th>
+            </tr>
+            <tr>
+              <td class="border-right"><input type="number" name="prgGoldGram" id="prgGoldGram" class="form-control form-data mtb5" value="0"/></td>
+              <td><input type="number" name="prgPayPrice" id="prgPayPrice" class="form-control form-data mtb5" value="0"/></td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="border-right">결제 후 미수</th>
+              <th class="border-right">순금 결제 미수</th>
+              <th>공임 결제 미수</th>
+            </tr>
+            <tr>
+              <td class="text-center border-right" id="calGoldGramTd">0</td>
+              <td class="text-center" id="calPayPriceTd">0</td>
+            </tr>
+            <tr>
+              <th class="border-right">비고</th>
+              <td colspan="2"><textarea name="payEtc" id="payEtc" class="form-control form-data mtb5" maxlength="600"></textarea></td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="btn_wrap text-center">
+            <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">등록</a>
+            <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			$(document).ready(function(){
+				$("#exptGoldGram, #prgGoldGram").on('change keyup', function() {
+					exptGoldGram = checkNullValR($("#exptGoldGram").val(),'0');
+					exptGoldGramIdx = exptGoldGram.indexOf('.');
+					exptGoldGramLen = (exptGoldGramIdx > 0) ? exptGoldGram.length - (exptGoldGramIdx+1) : 0;
+
+					calGoldGram = Number(checkNullValR($("#exptGoldGram").val(),'0')) - Number(checkNullValR($("#prgGoldGram").val(),'0'));
+					$("#calGoldGramTd").html(calGoldGram == 0.0 ? '0' : calGoldGram.toFixed(exptGoldGramLen));
+				});
+				$("#exptPayPrice, #prgPayPrice").on('change keyup', function() {
+					calPayPrice = Number(checkNullValR($("#exptPayPrice").val(),'0')) - Number(checkNullValR($("#prgPayPrice").val(),'0'));
+					$("#calPayPriceTd").html(priceWithComma(calPayPrice));
+				});
+			});
+
+			function fncSave(){
+        if(!isValidToken())
+          return false;
+
+				if($("#regDt").val() == ''){
+					alert('등록일을 입력해주세요.');
+					$("#regDt").focus();
+					return false;
+				}
+
+				if($("#venderNo_0").val() == ''){
+					alert('거래처를 선택해주세요.');
+					$("#venderNm_0").focus();
+					return false;
+				}
+
+				if(confirm('저장하시겠습니까?')){
+					const form = document.getElementById('form');
+					const params = {
+							venderNo : form.venderNo_0.value,
+							regDt : form.regDt.value,
+							storeCd : form.storeCd.value,
+							exptGoldGram : form.exptGoldGram.value,
+							exptPayPrice : form.exptPayPrice.value,
+							prgGoldGram : form.prgGoldGram.value,
+							prgPayPrice : form.prgPayPrice.value,
+							payEtc : form.payEtc.value
+					};
+
+					fetch('/api/vender/pay/write', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'Authorization': getToken()
+						},
+						body: JSON.stringify(params)
+					}).then(response => {
+						if(!response.ok){
+							if(response.status == '403'){
+                altNoAuth();
+                fncParentRefresh();
+                fncClose();
+                return false;
+              }
+              else {
+                throw new Error('Request Failed...');
+              }
+						}
+						alert('저장되었습니다.');
+						fncParentRefresh();
+						fncClose();
+					}).catch(error => {
+						alert('오류가 발생하였습니다.');
+					});
+				}
+			}
+
+			function fncVenderListPop(idx){
+				var url = "/vender/popup/list?openeridx="+idx;
+	      var name = "venderListPopup";
+	      var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+	      window.open(url, name, option);
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

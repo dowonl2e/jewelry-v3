@@ -1,0 +1,6 @@
+package com.jewelry.customer.entity;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface CustomerRepository extends JpaRepository<Customer, Long>, CustomerRepositoryCustom {
+}

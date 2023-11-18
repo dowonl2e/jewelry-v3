@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<th:block th:replace="fragments/header :: fragment-header"></th:block>
+<body id="page-top">
+  <!-- Start of Page Wrapper -->
+  <div id="wrapper">
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+      <!-- Sidebar - Brand -->
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/main">
+        <div class="sidebar-brand-text mx-3">단골금빵</div>
+      </a>
+
+      <!-- Divider -->
+      <hr class="sidebar-divider my-0">
+
+      <!-- Nav Item - Dashboard -->
+      <div id="nav-item-div"></div>
+
+      <!-- Sidebar Toggler (Sidebar) -->
+      <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+      </div>
+
+    </ul>
+    <!-- End of Sidebar -->
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+      <!-- Main Content -->
+      <div id="content">
+
+        <!-- Topbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+          <!-- Sidebar Toggle (Topbar) -->
+          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <h6 class="m-0 font-weight-bold text-primary" id="menuname-h6"></h6>
+
+          <!-- Topbar Navbar -->
+          <ul class="navbar-nav ml-auto">
+
+            <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+            <li class="nav-item dropdown no-arrow d-sm-none">
+              <a class="nav-link dropdown-toggle" href="#" id="searchDropdown" role="button"
+                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-search fa-fw"></i>
+              </a>
+              <!-- Dropdown - Messages -->
+              <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
+                   aria-labelledby="searchDropdown">
+                <form class="form-inline mr-auto w-100 navbar-search">
+                  <div class="input-group">
+                    <input type="text" class="form-control bg-light border-0 small"
+                           placeholder="Search for..." aria-label="Search"
+                           aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                      <button class="btn btn-primary" type="button">
+                        <i class="fas fa-search fa-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </li>
+
+            <div class="topbar-divider d-none d-sm-block"></div>
+
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small" id="user-name"></span>
+                <img class="img-profile rounded-circle" id="user-profile-img" alt="프로필 이미지" src="/img/undraw_profile.svg">
+              </a>
+              <!-- Dropdown - User Information -->
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a href="/member/profile" class="dropdown-item">
+                  <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>내 정보
+                </a>
+                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>Logout
+                </a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+        <!-- End of Topbar -->
+        <div class="container-fluid">
+          <th:block layout:fragment="content"></th:block>
+        </div>
+      </div>
+      <!-- End of Main Content -->
+
+      <!-- Footer -->
+      <th:block th:replace="fragments/footer :: fragment-footer"></th:block>
+      <!-- End of Footer -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+  </div>
+  <!-- End of Page Wrapper -->
+
+  <!-- Scroll to Top Button-->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <!-- Logout Modal-->
+  <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header text-center">
+          <h5 class="modal-title" id="exampleModalLabel">로그아웃</h5>
+          <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="modal-body">로그아웃 하시겠습니까?</div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" type="button" data-dismiss="modal">취소</button>
+          <a class="btn btn-primary" href="javascript:void(0)" onclick="fncLogout(); return false;">로그아웃</a>
+<!--          <form action="/signout" method="post">-->
+<!--            <button type="submit" style="display:none;" id="logoutSubmitBtn">Logout</button>-->
+<!--          </form>-->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    const uri = /*[[ ${#httpServletRequest.servletPath} ]]*/;
+    const uri2 = uri.substring(1, uri.length);
+
+    $(document).ready(function(){
+      init();
+		});
+
+    async function init(){
+      if(await isValidToken()){
+        findMyInfo();
+        findMenu();
+      }
+    }
+
+    function findMyInfo(){
+      const data = {
+        'menuId': uri2
+      };
+
+      fetch(`/api/member/profile/info`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': getToken()
+        },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if(!response.ok){
+          throw new Error('Request Failed...');
+        }
+        return response.json();
+      }).then(json => {
+        $('#user-name').html(checkNullVal(json.userName));
+        $('#user-profile-img').attr('src', (checkNullValR(json.gender) == '여' ? '/img/undraw_profile_1.svg' : '/img/undraw_profile.svg'));
+      }).catch(error => {
+        console.log(error);
+      });
+    }
+
+    function findMenu() {
+      var topMenuNm = '';
+      getJson('/api/menu/user/menus', null).then(response => {
+        if(Object.keys(response).length != 0){
+          if(response.status == 401 || response.status == 400){
+            alert('로그인 후 이용해주세요.');
+            location.replace('/access-denied');
+          }
+          else if (response.status != 200){
+            alert('오류가 발생하였습니다.');
+            location.replace('/error');
+          }
+          else {
+            if(response.data != null && response.data.list != null && response.data.list.length > 0){
+              let html = ``;
+
+              var isSubActive = '';
+              response.data.subList.forEach((obj2, idx) => {
+                if(uri2.startsWith(checkNullVal(obj2.menuId))){
+                  isSubActive = 'active';
+                  topMenuNm = checkNullVal(obj2.menuNm);
+                }
+              });
+
+              response.data.list.forEach((obj, idx) => {
+                menuLink = checkNullVal(obj.menuLink);
+                childCnt = checkNullVal(obj.childCnt);
+                menuId = checkNullVal(obj.menuId);
+                if(isSubActive == '' && uri2.startsWith(menuId) && topMenuNm == ''){
+                  topMenuNm = checkNullVal(obj.menuNm);
+                }
+
+                html += `<li class="nav-item `+(isSubActive == '' && uri2.startsWith(menuId) ? 'active' : '')+`">`;
+                html += `
+                  <a class="nav-link collapsed" href="`+(menuLink == '' ? '#none' : menuLink)+`" `+(childCnt > 0 ? 'aria-expanded="true"' : '')+`>
+                    <i class="fas fa-fw fa-folder"></i>
+                    <span> `+checkNullVal(obj.menuNm)+`</span>
+                  </a>
+                `;
+                if(childCnt > 0){
+                  html += `
+                    <div class="collapse show" aria-labelledby="heading`+menuId+`" data-parent="#accordionSidebar">
+                      <div class="bg-white py-2 collapse-inner rounded">
+                  `;
+                  response.data.subList.forEach((obj2, idx) => {
+                    subMenuId = checkNullVal(obj2.menuId);
+                    subMenuNm = checkNullVal(obj2.menuNm);
+                    subMenuLink = checkNullVal(obj2.menuLink);
+                    upMenuId = checkNullVal(obj2.upMenuId);
+                    if(upMenuId == menuId){
+                      menunm = uri.startsWith(subMenuId) ? subMenuNm : '';
+                      html += `
+                        <a class="collapse-item `+(uri2.startsWith(subMenuId) ? 'active' : '')+`" href="`+(subMenuLink == '' ? '#none' : subMenuLink)+`">
+                          <span> `+subMenuNm+`</span>
+                        </a>
+                      `;
+                    }
+                  });
+                  html += `
+                      </div>
+                    </div>
+                  `;
+                }
+                html += `
+                  </li>
+                  <hr class="sidebar-divider">
+                `;
+              });
+
+              $("#menuname-h6").html(topMenuNm);
+              $("#nav-item-div").html(html);
+            }
+          }
+        }
+      });
+    }
+
+    function fncLogout(){
+      fetch(`/api/jauth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': getToken()
+        }
+      }).then(response => {
+        if(!response.ok){
+          throw new Error('Request Failed...');
+        }
+        initStorageValue();
+      }).catch(error => {
+        alert('로그아웃에 실패했습니다.');
+        console.log(error);
+      });
+    }
+  </script>
+
+</body>
+</html>

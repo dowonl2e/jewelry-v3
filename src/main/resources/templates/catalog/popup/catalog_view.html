@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+    <!-- DataTales Example -->
+    <div class="card shadow mt-4 mb-4">
+        <div class="card-header py-3 text-center">
+            <h6 class="m-0 font-weight-bold text-primary">카다로그</h6>
+        </div>
+        <div class="card-body">
+            <form id="form" class="form-horizontal">
+                <div class="row text-center border-bottom">
+                    <div class="col bg-light" style="line-height:40px;">제품 사진</div>
+                </div>
+                <div class="row text-center">
+                    <div class="col"><img id="catalog_img" width="640px" height="480px" class="m10"/></div>
+                </div>
+                <div class="row text-center border-bottom">
+                    <div class="col bg-light" style="line-height:40px;">모델 정보</div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center" style="line-height:40px;">
+                    <div class="col bg-light border-right">제조사</div>
+                    <div class="col bg-light border-right">모델번호</div>
+                    <div class="col bg-light">품명</div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center" style="line-height:40px;">
+                    <div class="col border-right" id="vender_div"></div>
+                    <div class="col border-right" id="model_id_div"></div>
+                    <div class="col" id="model_nm_div"></div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center" style="line-height:40px;">
+                    <div class="col bg-light border-right">표준재질</div>
+                    <div class="col bg-light border-right">표준중량(g)</div>
+                    <div class="col bg-light">표준색상</div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center" style="line-height:40px;">
+                    <div class="col border-right" id="stdd_material_div"></div>
+                    <div class="col border-right" id="stdd_weight_div"></div>
+                    <div class="col" id="stdd_color_div"></div>
+                </div>
+
+                <div class="row row-cols-3 border-bottom text-center" style="line-height:40px;">
+                    <div class="col bg-light border-right">표준사이즈</div>
+                    <div class="col bg-light border-right">주문시 유의사항</div>
+                    <div class="col bg-light">등록일</div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center" style="line-height:40px;">
+                    <div class="col border-right" id="stdd_size_div"></div>
+                    <div class="col border-right" id="odr_notice_div"></div>
+                    <div class="col" id="reg_dt_div"></div>
+                </div>
+
+                <div class="row text-center border-bottom" style="line-height:40px;">
+                    <div class="col bg-light" style="line-height:40px;">구매단가</div>
+                </div>
+                <div class="row row-cols-4 border-bottom text-center" style="line-height:40px;">
+                    <div class="col bg-light border-right">기본공임</div>
+                    <div class="col bg-light border-right">메인가격</div>
+                    <div class="col bg-light border-right">보조가격</div>
+                    <div class="col bg-light">합계</div>
+                </div>
+                <div class="row row-cols-4 border-bottom text-center" style="line-height:40px;">
+                    <div class="col border-right" id="basic_idst_div"></div>
+                    <div class="col border-right" id="main_price_div"></div>
+                    <div class="col border-right" id="sub_price_div"></div>
+                    <div class="col border-right" id="total_price_div"></div>
+                </div>
+                <div class="table-responsive clearfix mt-3">
+                    <table class="table">
+                        <colgroup>
+                            <col width="8%"/>
+                            <col width="13%"/>
+                            <col width="18%"/>
+                            <col width="10%"/>
+                            <col width="13%"/>
+                            <col width="13%"/>
+                            <col />
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th colspan="7">스톤정보</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center border-right">No</th>
+                            <th class="text-center border-right">구분</th>
+                            <th class="text-center border-right">스톤명</th>
+                            <th class="text-center border-right">알수</th>
+                            <th class="text-center border-right">구매단가</th>
+                            <th class="text-center border-right">합계</th>
+                            <th class="text-center">스톤설명</th>
+                        </tr>
+                        </thead>
+                        <tbody id="stonelist"></tbody>
+                    </table>
+                </div>
+
+                <div class="btn_wrap text-center">
+                  <span id="modify-auth"></span>
+                  <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+                </div>
+                <nav aria-label="Page navigation" class="text-center">
+                    <ul class="pagination"></ul>
+                </nav>
+            </form>
+        </div>
+    </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			var codemap = {
+        [# th:each="code, loop : ${cdmapper}"]
+          "[(${code.cdId})]": "[(${code.cdNm})]",
+        [/]
+			};
+
+			window.onload = () => {
+	      find();
+      }
+
+			function find() {
+        if(!isValidToken())
+          return false;
+
+				const catalogno = /*[[${catalogno}]]*/;
+				if ( !catalogno )
+          return false;
+
+        fetch(`/api/catalog/`+catalogno, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': getToken()
+					}
+				}).then(response => {
+          if (!response.ok) {
+            throw new Error('Request failed...');
+          }
+          return response.json();
+        }).then(json => {
+            if(checkNullVal(json.menuAuthResponseDto.viewAuth) != 'Y'){
+              altNoAuth();
+              fncParentRefresh();
+              fncClose();
+              return false;
+            }
+
+            if(checkNullVal(json.menuAuthResponseDto.modifyAuth) == 'Y'){
+              let modifyAuthBtn = `<a href="javascript: void(0);" onclick="goModify(); return false;" class="btn btn-primary waves-effect waves-light mlr5">수정</a>`;
+              document.getElementById('modify-auth').innerHTML = modifyAuthBtn;
+            }
+
+            var files = json.files;
+            var filePath = '';
+            var fileNm = '';
+
+            if(files != null && files.length > 0){
+                for(var i = 0 ; i < files.length ; i++){
+                    if(files[i].fileOrd == 1){
+                        filePath = checkNullVal(files[i].filePath);
+                        fileNm = checkNullVal(files[i].fileNm);
+                    }
+                }
+            }
+            if(fileNm == '')
+                document.getElementById('catalog_img').src = '/img/no-image.png';
+            else
+                document.getElementById('catalog_img').src = '/file/image/display?filePath='+filePath+'&fileName='+fileNm;
+            document.getElementById('vender_div').innerHTML = checkNullVal(json.venderNm);
+            document.getElementById('model_id_div').innerHTML = checkNullVal(json.modelId);
+            document.getElementById('model_nm_div').innerHTML = checkNullVal(json.modelNm);
+            document.getElementById('stdd_material_div').innerHTML = checkNullVal(codemap[json.stddMaterialCd]);
+            document.getElementById('stdd_weight_div').innerHTML = checkNullVal(json.stddWeight);
+            document.getElementById('stdd_color_div').innerHTML = checkNullVal(codemap[json.stddColorCd]);
+            document.getElementById('stdd_size_div').innerHTML = checkNullVal(json.stddSize);
+            document.getElementById('odr_notice_div').innerHTML = checkNullVal(json.odrNotice);
+            document.getElementById('reg_dt_div').innerHTML = checkSubstringNullVal(json.regDt,0,10);
+            document.getElementById('basic_idst_div').innerHTML = priceWithComma(json.basicIdst);
+            document.getElementById('main_price_div').innerHTML = priceWithComma(json.mainPrice);
+            document.getElementById('sub_price_div').innerHTML = priceWithComma(json.subPrice);
+            totalPriceVal = Number(checkNullValR(json.basicIdst,'0'));
+            totalPriceVal += Number(checkNullValR(json.mainPrice,'0'));
+            totalPriceVal += Number(checkNullValR(json.subPrice,'0'));
+            document.getElementById('total_price_div').innerHTML = priceWithComma(totalPriceVal);
+
+            var catalogStones = json.catalogStones;
+            var html = ``;
+            if(catalogStones == null || catalogStones.length == 0){
+                html += `
+                    <tr class="border-bottom">
+                        <td colspan="7" class="text-center" style="line-height:60px;">등록된 스톤정보가 없습니다.</td>
+                    </tr>
+                `;
+            }
+            else {
+                var totalBeadCnt = 0;
+                var totalPurchasePrice = 0;
+                for(var i = 0 ; i < catalogStones.length ; i++){
+                    beadCnt = Number(catalogStones[i].beadCnt);
+                    purchasePriceSum = (beadCnt*Number(catalogStones[i].purchasePrice));
+                    html += `
+                        <tr>
+                            <td class="text-center border-right">`+(i+1)+`</td>
+                            <td class="text-center border-right">`+checkNullVal(codemap[catalogStones[i].stoneTypeCd])+`</td>
+                            <td class="text-center border-right">`+checkNullVal(catalogStones[i].stoneNm)+`</td>
+                            <td class="text-center border-right">`+checkNullVal(beadCnt)+`</td>
+                            <td class="text-center border-right">`+checkNullVal(catalogStones[i].purchasePrice)+`</td>
+                            <td class="text-center border-right">`+purchasePriceSum+`</td>
+                            <td class="text-center">`+checkNullVal(catalogStones[i].stoneDesc)+`</td>
+                        </tr>
+                    `;
+                    totalBeadCnt += beadCnt;
+                    totalPurchasePrice += purchasePriceSum;
+                }
+                html += `
+                    <tr>
+                        <td colspan="3" class="text-right border-right border-bottom">소계</td>
+                        <td id="total_bead_cnt_txt" class="bg-yellow text-center border-right border-bottom">`+totalBeadCnt+`</td>
+                        <td class="border-right border-bottom"></td>
+                        <td id="total_price_txt" class="bg-yellow text-center border-right border-bottom">`+totalPurchasePrice+`</td>
+                        <td class="border-bottom"></td>
+                    </tr>
+                `;
+
+            }
+          document.getElementById('stonelist').innerHTML = html;
+
+        }).catch(error => {
+            alert('카다로그 정보를 찾을 수 없습니다.');
+            fncParentRefresh();
+            fncClose();
+        });
+			}
+
+			/**
+			 * 수정하기
+			 */
+			function goModify() {
+			  const catalogno = /*[[${catalogno}]]*/
+        location.href = '/catalog/popup/modify/'+catalogno;
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

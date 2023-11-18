@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card-header py-3 text-left mt-4">
+    <h6 class="m-0 font-weight-bold text-primary">고객 수리 현황</h6>
+  </div>
+  <!-- DataTales Example -->
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <form id="searchForm" onsubmit="return false;" class="border-bottom">
+        <div class="mb20" id="adv-search">
+          <div class="form-inline">
+            <span class="mlr5">요청일</span>
+            <input type="date" id="searchStdt" class="form-control mlr5"/> ~
+            <input type="date" id="searchEddt" class="form-control mlr5"/>
+            <input type="number" id="recordCount" class="form-control mlr5" placeholder="행 개수" min="1" max="100" oninput="fncCheckZero(this);" style="width:100px;"/>
+            <input type="text" id="searchWord" class="form-control mlr5" placeholder="수리품명 입력" style="width: auto;" />
+            <button type="button" onclick="findAll(0);" class="btn btn-secondary">
+              <span aria-hidden="true" class="glyphicon glyphicon-search">검색</span>
+            </button>
+            <a href="javascript: void(0);" onclick="fncRefresh(); return false;" class="btn btn-warning waves-effect waves-light mlr5">새로고침</a>
+          </div>
+        </div>
+      </form>
+      <div class="table-responsive clearfix text-center border-bottom" id="list">
+
+      </div>
+
+      <nav aria-label="Page navigation" class="text-center">
+        <ul class="pagination"></ul>
+      </nav>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+
+      var minNumberLen = 1;
+      var maxNumberLen = 100;
+
+      window.onload = () => {
+        setQueryStringParams();
+        findAll();
+        addEnterSearchEvent();
+      }
+
+      /**
+        * 키워드 - 엔터 검색 이벤트 바인딩
+        */
+      function addEnterSearchEvent() {
+        document.getElementById('searchWord').addEventListener('keyup', (e) => {
+          if (e.keyCode === 13) {
+            findAll(0);
+          }
+        });
+      }
+
+      function drawPages(params) {
+        if (!params) {
+          document.querySelector('.pagination').innerHTML = '';
+          return false;
+        }
+
+        let html = '';
+        const pagination = params;
+
+        let startPage = pagination.startPage;
+        let endPage = pagination.endPage;
+        let nextStartPage = pagination.endPage+1 >= pagination.totalPage ? pagination.totalPage : pagination.endPage+1;
+
+        // 첫 페이지, 이전 페이지
+        if (pagination.hasPrev) {
+          html += `
+            <li><a href="javascript:void(0)" onclick="findAll(0);" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+            <li><a href="javascript:void(0)" onclick="findAll(`+(startPage)+`);" aria-label="Previous"><span aria-hidden="true">&lsaquo;</span></a></li>
+          `;
+        }
+
+        // 페이지 번호
+        for (let i = startPage ; i < endPage ; i++) {
+          const active = ((i) === (pagination.currentPage-1)) ? 'class="active"' : '';
+          html += '<li '+active+'><a href="javascript:void(0)" onclick="findAll(\''+(i+1)+'\')">'+(i+1)+'</a></li>';
+        }
+
+        // 다음 페이지, 마지막 페이지
+        if (pagination.hasNext) {
+          html += `
+            <li><a href="javascript:void(0)" onclick="findAll(`+(nextStartPage)+`);" aria-label="Next"><span aria-hidden="true">&rsaquo;</span></a></li>
+            <li><a href="javascript:void(0)" onclick="findAll(`+(pagination.totalPage)+`);" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+          `;
+        }
+
+        document.querySelector('.pagination').innerHTML = html;
+      }
+
+      /**
+       * 게시글 리스트 조회
+       */
+      function findAll(page) {
+
+        const pageParams = Number(new URLSearchParams(location.search).get('page'));
+        page = page ? page : (pageParams ? pageParams : 1);
+
+        const form = document.getElementById('searchForm');
+
+        var params = {
+          currentPage: page
+          , searchStdt: form.searchStdt.value
+          , searchEddt: form.searchEddt.value
+          , recordCount: form.recordCount.value
+          , searchWord: form.searchWord.value
+        }
+        checkListNullParams(params);
+
+        const queryString = new URLSearchParams(params).toString();
+        const replaceUri = location.pathname + '?' + queryString;
+        history.replaceState({}, '', replaceUri);
+        const customerno = /*[[${customerno}]]*/;
+
+        getJson('/api/repair/customer/list/'+customerno+'/', params).then(response => {
+          if (!Object.keys(response).length || response.list == null || response.list.length == 0) {
+            document.getElementById('list').innerHTML = '<div class="row row-cols-1" style="line-height:80px;"><div class="col">수리이력이 없습니다.</div></div>';
+            drawPages();
+            return false;
+          }
+
+          let html = '';
+          let num = response.params.totalCount - (response.params.currentPage-1) * response.params.recordCount;
+
+          response.list.forEach((obj, idx) => {
+            if(idx%4 == 0){
+              html += `<div class="row">`;
+            }
+            html += `
+                <div class="col-xl-3 col-lg-4 text-center text-black">
+                  <div class="card bg-light shadow rounded m10" style="min-height:385px;">
+                    <div class="row row-cols-1">
+                      <div class="col">
+                        <div class="m5 rounded">
+            `;
+            filePath = checkNullVal(obj.filePath);
+            if(filePath == ''){
+              html += `
+                <img src="/img/no-image.png" width="100%" style="height:200px;"/>
+              `;
+            }
+            else {
+              html += `
+                <img src="/file/image/display?filePath=`+filePath+`&fileName=`+checkNullVal(obj.fileNm)+`" width="100%" style="height:200px;"/>
+              `;
+            }
+            html += `
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row row-cols-1 mlr5 mt5">
+                      <div class="col text-center">
+                        <input type="checkbox" id="repairNo_`+obj.repairNo+`" class="form-check-inline form-check" value="`+obj.repairNo+`"/>
+                        <label for="catalog_no_`+obj.catalogNo+`" class="form-label">
+                          <a href="javascript: void(0);" onclick="fncPopupView(\'`+obj.repairNo+`\'); return false;">
+                          ` + checkSubstringNullVal(obj.repairNm,0,14) + `
+                          </a>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="row mlr1 mtb5">
+                      <div class="col text-center">고객명 : `+checkSubstringNullVal(obj.customerNm,0,18)+`</div>
+                    </div>
+                    <div class="row mlr1 mtb5">
+                      <div class="col text-center">요청일 : `+checkSubstringNullVal(obj.repairReqDt,0,10)+`</div>
+                    </div>
+            `;
+            if(checkNullVal(obj.repairDueDt) != ''){
+              html += `
+                <div class="row mlr1 mtb5">
+                  <div class="col text-center">완료예정일 : `+checkSubstringNullVal(obj.repairDueDt,0,10)+`</div>
+                </div>
+            `;
+            }
+            if(checkNullVal(obj.repairResDt) != ''){
+              html += `
+                <div class="row mlr1 mtb5">
+                  <div class="col text-center">완료일 : `+checkSubstringNullVal(obj.repairResDt,0,10)+`</div>
+                </div>
+              `;
+            }
+            html += `
+                </div>
+              </div>
+            `;
+            if(idx > 0 && (idx+1)%4 == 0){
+              html += `</div>`;
+            }
+          });
+
+          document.getElementById('list').innerHTML = html;
+          drawPages(response.params);
+        });
+      }
+
+      /**
+       * 수정하기
+       */
+      function fncPopupView(repairno) {
+        var url = "/repair/popup/"+repairno;
+        var name = "repairViewPopup";
+        var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+      }
+    /*]]>*/
+	</script>
+</th:block>
+</html>

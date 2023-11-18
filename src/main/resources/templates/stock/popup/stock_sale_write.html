@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">재고 판매</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal">
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col />
+              <col width="14%"/>
+              <col width="14%"/>
+              <col width="14%"/>
+              <col width="14%"/>
+              <col width="14%"/>
+              <col width="14%"/>
+            </colgroup>
+            <tbody>
+            <tr>
+              <th colspan="7" class="bg-light text-center">구매 고객</th>
+            </tr>
+            <tr>
+              <td colspan="7">
+                <div class="input-group-append">
+                  <input type="hidden" name="customerNo" id="customerNo" class="form-control form-data mtb5"/>
+                  <input type="text" name="customerNm" id="customerNm" class="form-control form-data mtb5" readonly="readonly"/>
+                  <i class="fas fa-search fa-sm ml5 mt15" onclick="fncCustomerListPop(); return false;"></i>
+                  <input type="hidden" name="customerCel" id="customerCel" class="form-control mtb5" disabled="disabled"/>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th colspan="7" class="bg-light text-center">매출 정보</th>
+            </tr>
+            <tr>
+              <td class="bg-light border-right text-center">매출금액<span class="important"> *</span></td>
+              <td colspan="6" class="text-center">
+                <input type="number" name="salePrice" id="salePrice" class="form-control form-data mtb5"/>
+              </td>
+            </tr>
+            <tr>
+              <th colspan="7">결재(받은) 금액</th>
+            </tr>
+            <tr class="border-bottom">
+              <td class="bg-light border-right text-center">구분</td>
+              <td class="bg-light border-right text-center">카드</td>
+              <td class="bg-light border-right text-center">현금</td>
+              <td class="bg-light border-right text-center">고금</td>
+              <td class="bg-light border-right text-center">기타</td>
+              <td class="bg-light border-right text-center">포인</td>
+              <td class="bg-light text-center">합계</td>
+            </tr>
+            <tr>
+              <td class="text-center border-right">
+                <select name="recPayTypeCd" id="recPayTypeCd" class="form-control form-data mtb5">
+                  <option th:each="cditem : ${ptlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                </select>
+              </td>
+              <td class="text-center border-right">
+                <input type="number" name="cardPrice" id="cardPrice" class="form-control cardprice form-data mtb5"/>
+              </td>
+              <td class="text-center border-right">
+                <input type="number" name="cashPrice" id="cashPrice" class="form-control cashprice form-data mtb5"/>
+              </td>
+              <td class="text-center border-right">
+                <input type="number" name="maintPrice" id="maintPrice" class="form-control maintprice form-data mtb5"/>
+              </td>
+              <td class="text-center border-right">
+                <input type="number" name="etcPrice" id="etcPrice" class="form-control etcprice form-data mtb5"/>
+              </td>
+              <td class="text-center border-right">
+                <input type="number" name="pntPrice" id="pntPrice" class="form-control pntprice form-data mtb5"/>
+              </td>
+              <td class="text-center" id="total_sale_price_td"></td>
+            </tr>
+            <tr class="border-bottom">
+              <td class="bg-light border-right text-center">적립 포인트</td>
+              <td colspan="6" class="text-center">
+                <input type="number" name="accuPnt" id="accuPnt" class="form-control form-data mtb5"/>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="btn_wrap text-center">
+          <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">저장</a>
+          <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			window.onload = () => {
+			  validCustomer();
+
+				$(".cardprice, .cashprice, .maintprice, .etcprice, .pntprice").on('change keyup', function() {
+					$(".cardprice").each(function(idx){
+						cardPrice = Number($(".cardprice").eq(idx).val() == '' ? 0 : $(".cardprice").eq(idx).val());
+						cashPrice = Number($(".cashprice").eq(idx).val() == '' ? 0 : $(".cashprice").eq(idx).val());
+						maintPrice = Number($(".maintprice").eq(idx).val() == '' ? 0 : $(".maintprice").eq(idx).val());
+						etcPrice = Number($(".etcprice").eq(idx).val() == '' ? 0 : $(".etcprice").eq(idx).val());
+						pntPrice = Number($(".pntprice").eq(idx).val() == '' ? 0 : $(".pntprice").eq(idx).val());
+
+						totalSalePriceTd = cardPrice+cashPrice+maintPrice+etcPrice+pntPrice;
+
+						$("#total_sale_price_td").text((totalSalePriceTd == 0 ? '' : totalSalePriceTd));
+					});
+				});
+			}
+
+      function validCustomer() {
+        const stocksno = /*[[${param.stocksno}]]*/;
+				fetch(`/api/stock/stocks/valid/customer?stocksNo=`+stocksno, {
+				  method: 'GET',
+				  headers: {
+				    'Authorization': getToken()
+				  }
+				}).then(response => {
+		    	if (!response.ok) {
+						throw new Error('Request failed...');
+			    }
+		    	return response.json();
+
+		   	}).then(json => {
+          let result = checkNullVal(json.result);
+          if(result != 'success'){
+            if(result == 'fail1')
+              alert('판매할 재고를 선택해주세요.');
+            else if(result == 'fail2')
+              alert('재고내역이 없습니다.');
+            else if(result == 'fail3')
+              alert('주문재고와 일반재고는 별도로 판매 가능합니다.');
+            else if(result == 'fail4')
+              alert('주문재고는 동일 고객의 재고만 판매 가능합니다.');
+            fncClose();
+          }
+          else {
+            const customerNo = checkNullVal(json.customerNo);
+            const customerNm = checkNullVal(json.customerNm);
+            document.getElementById('customerNo').value = (customerNo == '0' ? '' : customerNo);
+            document.getElementById('customerNm').value = customerNm;
+          }
+		   	}).catch(error => {
+		    	alert('오류가 발생하였습니다.');
+		    	console.log(error);
+		    	fncParentRefresh();
+		    	//fncClose();
+		   	});
+			}
+
+			function fncSave(){
+        if(!isValidToken())
+          return false;
+
+        let stocksno = /*[[${param.stocksno}]]*/;
+        if(!stocksno)
+          return false;
+
+			  if($("#customerNo").val() == ''){
+				  alert('고객을 선택해주세요.');
+				  $("#customerNo").focus();
+				  return false;
+			  }
+
+			  if($("#salePrice").val() == ''){
+				  alert('매출금액을 입력해주세요.');
+				  $("#salePrice").focus();
+				  return false;
+			  }
+
+				if(confirm('판매하시겠습니까?')){
+
+					const formData = new FormData();
+					$(".form-data").each(function(){
+						formData.append($(this).attr("name"), checkNullVal($(this).val()));
+					});
+          formData.append('stockNoArr[]', stocksno);
+
+					fetch('/api/stock/stocks/sale', {
+						method: 'PATCH',
+						headers: {
+						  'Authorization': getToken()
+						},
+						body: formData
+					}).then(response => {
+						if(!response.ok){
+							if(response.status == '403'){
+                altNoAuth();
+                fncParentRefresh();
+                fncClose();
+                return false;
+              }
+              else {
+                throw new Error('Request Failed...');
+              }
+						}
+						alert('판매 되었습니다.');
+						fncParentRefresh();
+						fncClose();
+					}).catch(error => {
+						alert('오류가 발생하였습니다.');
+					});
+				}
+			}
+
+			function fncCustomerListPop(){
+				var url = "/customer/popup/list";
+	      var name = "customerListPopup";
+	      var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+	      window.open(url, name, option);
+			}
+
+		/*]]>*/
+  </script>
+</th:block>
+</html>

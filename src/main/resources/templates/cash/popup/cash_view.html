@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+    <div class="card shadow mt-4 mb-4">
+        <div class="card-header py-3 text-center">
+            <h6 class="m-0 font-weight-bold text-primary">금/현금 조회</h6>
+        </div>
+        <div class="card-body">
+            <form id="form" class="form-horizontal">
+                <div class="table-responsive clearfix">
+                    <table class="table">
+                        <colgroup>
+                            <col width="20%"/>
+                            <col width="20%"/>
+                            <col width="20%"/>
+                            <col width="20%"/>
+                            <col width="20%"/>
+                        </colgroup>
+                        <tbody>
+                        <tr>
+                            <td rowspan="2" class="bg-light border-right text-center">관리매장</td>
+                            <td rowspan="2" class="bg-light border-right text-center">등록일</td>
+                            <td colspan="3" class="bg-light text-center">합 계</td>
+                        </tr>
+                        <tr>
+                            <td class="bg-light border-right text-center">입고</td>
+                            <td class="bg-light border-right text-center">출고</td>
+                            <td class="bg-light text-center">입고-출고</td>
+                        </tr>
+                        <tr class="border-bottom">
+                            <td class="text-center border-right mtb5" id="store_cd_td"></td>
+                            <td class="text-center border-right" id="reg_dt_td"></td>
+                            <td class="text-center border-right" id="received_price_td"></td>
+                            <td class="text-center border-right" id="shipout_price_td"></td>
+                            <td class="text-center" id="rece_ship_total_price_td"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-responsive clearfix mt-3">
+                    <table class="table" style="min-width:150%; overflow-x:scroll;">
+                        <colgroup>
+                            <col width="3%"/>
+                            <col width="7%"/>
+                            <col width="9%"/>
+                            <col width="10%"/>
+                            <col width="10%"/>
+                            <col width="10%"/>
+                            <col width="9%"/>
+                            <col width="6%"/>
+                            <col width="6%"/>
+                            <col width="8%"/>
+                            <col width="8%"/>
+                            <col />
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th class="text-center border-right">No</th>
+                            <th class="text-center border-right">구분</th>
+                            <th class="text-center border-right">계정</th>
+                            <th class="text-center border-right">통장구분</th>
+                            <th class="text-center border-right">거래처</th>
+                            <th class="text-center border-right">내역</th>
+                            <th class="text-center border-right">재질</th>
+                            <th class="text-center border-right">중량(g)</th>
+                            <th class="text-center border-right">수량</th>
+                            <th class="text-center border-right">단가</th>
+                            <th class="text-center border-right">공급가</th>
+                            <th class="text-center">합계금액</th>
+                        </tr>
+                        </thead>
+                        <tbody id="list">
+                        <tr class="border-bottom">
+                            <td class="text-center border-right">1</td>
+                            <td class="text-center border-right" id="cash_type_cd_td"></td>
+                            <td class="text-center border-right" id="cash_type_cd2_td"></td>
+                            <td class="text-center border-right" id="bankbook_cd_td"></td>
+                            <td class="text-center border-right" id="vender_nm_td"></td>
+                            <td class="text-center border-right" id="history_desc_td"></td>
+                            <td class="text-center border-right" id="material_cd_td"></td>
+                            <td class="text-center border-right" id="weight_gram_td"></td>
+                            <td class="text-center border-right" id="quantity_td"></td>
+                            <td class="text-center border-right" id="unit_price_td"></td>
+                            <td class="text-center border-right" id="supply_price_td"></td>
+                            <td class="text-center border-right" id="total_price_td"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="btn_wrap text-center">
+                    <span id="modify-auth"></span>
+                    <span id="remove-auth"></span>
+                    <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+          var codemap = {
+            [# th:each="code, loop : ${cdmapper}"]
+              "[(${code.cdId})]": "[(${code.cdNm})]",
+            [/]
+          };
+          var codemap2 = {
+            [# th:each="code, loop : ${cdmapper2}"]
+              "[(${code.cdId})]": "[(${code.cdNm})]",
+            [/]
+          };
+
+          window.onload = () => {
+            find();
+          }
+
+          function find() {
+            if(!isValidToken())
+              return false;
+
+            const cashno = /*[[${cashno}]]*/;
+            if ( !cashno )
+              return false;
+
+            fetch(`/api/cash/`+cashno, {
+              method: 'GET',
+              headers: {
+                'Authorization': getToken()
+              }
+            }).then(response => {
+              if (!response.ok) {
+                throw new Error('Request failed...');
+              }
+              return response.json();
+
+            }).then(json => {
+              if(checkNullVal(json.menuAuthResponseDto.viewAuth) != 'Y'){
+                altNoAuth();
+                fncParentRefresh();
+                fncClose();
+                return false;
+              }
+
+              if(checkNullVal(json.menuAuthResponseDto.modifyAuth) == 'Y'){
+                let modifyAuthBtn = `<a href="javascript: void(0);" onclick="goModify(); return false;" class="btn btn-primary waves-effect waves-light mlr5">수정</a>`;
+                document.getElementById('modify-auth').innerHTML = modifyAuthBtn;
+              }
+
+              if(checkNullVal(json.menuAuthResponseDto.removeAuth) == 'Y'){
+                let removeAuthBtn = `<a href="javascript: void(0);" onclick="fncRemove(); return false;" class="btn btn-danger btn-icon-split btn-sm mlr5">삭제</a>`;
+                document.getElementById('remove-auth').innerHTML = removeAuthBtn;
+              }
+
+              document.getElementById('store_cd_td').innerHTML = checkNullVal(codemap[json.storeCd]);
+              document.getElementById('reg_dt_td').innerHTML = checkSubstringNullVal(json.regDt,0,10);
+              document.getElementById('cash_type_cd_td').innerHTML = checkNullVal(codemap[json.cashTypeCd]);
+              document.getElementById('cash_type_cd2_td').innerHTML = checkNullVal(codemap2[json.cashTypeCd2]);
+              document.getElementById('bankbook_cd_td').innerHTML = checkNullVal(codemap[json.bankbookCd]);
+              document.getElementById('vender_nm_td').innerHTML = checkNullVal(json.venderNm);
+              document.getElementById('history_desc_td').innerHTML = checkNullVal(json.historyDesc);
+              document.getElementById('material_cd_td').innerHTML = checkNullVal(codemap[json.materialCd]);
+              document.getElementById('weight_gram_td').innerHTML = checkNullVal(json.weightGram);
+              document.getElementById('quantity_td').innerHTML = checkNullVal(json.quantity);
+              document.getElementById('unit_price_td').innerHTML = priceWithComma(json.unitPrice);
+              document.getElementById('supply_price_td').innerHTML = priceWithComma(json.unitPrice);
+              document.getElementById('total_price_td').innerHTML = priceWithComma(json.unitPrice);
+
+              typePrice = checkNullValR(json.unitPrice,'0');
+              if(checkNullVal(json.cashTypeCd) == 'RS01'){
+                document.getElementById('received_price_td').innerHTML = (typePrice == '0' ? '' : priceWithComma(typePrice));
+                document.getElementById('rece_ship_total_price_td').innerHTML = (typePrice == '0' ? '' : priceWithComma(typePrice));
+              }
+              else if(checkNullVal(json.cashTypeCd) == 'RS02'){
+                document.getElementById('shipout_price_td').innerHTML = (typePrice == '0' ? '' : priceWithComma(typePrice));
+                document.getElementById('rece_ship_total_price_td').innerHTML = (typePrice == '0' ? '' : ('-'+priceWithComma(typePrice)));
+              }
+            }).catch(error => {
+              alert('금/현금 정보를 찾을 수 없습니다.');
+              fncParentRefresh();
+              fncClose();''
+            });
+          }
+
+          /**
+           * 수정하기
+           */
+          function goModify() {
+            const cashno = /*[[${cashno}]]*/;
+            location.href = '/cash/popup/modify/'+cashno;
+          }
+
+          function remove() {
+            if ( !confirm(`금/현금 내역을 삭제하시겠습니까?`) ) {
+              return false;
+            }
+
+            const cashno = /*[[${cashno}]]*/;
+            fetch(`/api/cash/remove/`+cashno, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+
+            }).then(response => {
+              if (!response.ok) {
+                throw new Error('Request failed...');
+              }
+
+              alert('삭제되었습니다.');
+              fncParentRefresh();
+              fncClose();
+
+            }).catch(error => {
+              alert('오류가 발생하였습니다.');
+            });
+          }
+
+        /*]]>*/
+    </script>
+</th:block>
+</html>

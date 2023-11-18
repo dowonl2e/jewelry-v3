@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary" id="upCdNm"></h6>
+    </div>
+    <form id="form" class="form-horizontal">
+      <div class="form-group row border-top">
+        <div class="col-sm-3 text-right mt20">코드ID</div>
+        <div class="col-sm-8 mt10">
+          <input type="text" id="cdId" class="form-control" oninput="fncChangeUpperCase(this);" maxlength="5" readonly="readonly"/>
+        </div>
+      </div>
+      <div class="form-group row border-top">
+        <div class="col-sm-3 text-right mt20">코드명</div>
+        <div class="col-sm-8 mt10">
+          <input type="text" id="cdNm" class="form-control" maxlength="20"/>
+        </div>
+      </div>
+
+      <div class="form-group row border-top border-bottom">
+        <div class="col-sm-3 text-right mt10">사용여부</div>
+        <div class="col-sm-8 mt10">
+          <input type="radio" name="useYn" id="use_y" value="Y" checked="checked"/><label for="use_y">&nbsp;사용</label>&nbsp;
+          <input type="radio" name="useYn" id="use_n" value="N"/><label for="use_n">&nbsp;미사용</label>
+        </div>
+      </div>
+
+      <div class="btn_wrap text-center mb-3">
+        <a href="javascript:void(0);" onclick="save(); return false;" class="btn btn-primary waves-effect waves-light"><span class="text">저장</span></a>
+        <a href="javascript:void(0);" onclick="goList();" class="btn btn-secondary btn-icon-split"><span class="text">목록</span></a>
+      </div>
+    </form>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			window.onload = () => {
+        find();
+	  	}
+
+			function find() {
+
+        if(!isValidToken())
+          return false;
+
+				const upcdid = /*[[${upcdid}]]*/;
+				if ( !upcdid ) {
+		    	return false;
+		    }
+
+				fetch(`/api/code/`+upcdid, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': getToken()
+          }
+        }).then(response => {
+		    	if (!response.ok) {
+						throw new Error('Request failed...');
+			    }
+		    	return response.json();
+		   	}).then(json => {
+		   		document.getElementById('upCdNm').innerHTML = checkNullVal(json.cdNm);
+		   		const form = document.getElementById('form');
+		   		form.cdId.value = checkNullVal(json.cdId)+addZeroFront(json.childCnt+1,2);
+		   	}).catch(error => {
+		    	alert('코드정보를 찾을 수 없습니다.');
+		    	fncParentRefresh();
+		   	});
+			}
+
+			function save(){
+			  if(!isValidToken())
+			    return false;
+
+        if($("#cdNm").val() == ''){
+          alert('코드명을 입력해주세요.');
+          $("#cdNm").focus();
+          return false;
+        }
+
+        const form = document.getElementById('form');
+        const params = {
+          cdId : form.cdId.value,
+          cdNm : form.cdNm.value,
+          useYn : form.useYn.value,
+          upCdId : /*[[${upcdid}]]*/,
+          cdDepth : /*[[${cddepth}]]*/
+        };
+
+        fetch('/api/code/write', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': getToken()
+          },
+          body: JSON.stringify(params)
+        }).then(response => {
+          if(!response.ok){
+            if(response.status == '403'){
+              altNoAuth();
+              goList();
+              return false;
+            }
+            else {
+              throw new Error('Request Failed...');
+            }
+          }
+          alert('저장되었습니다.');
+          goList();
+        }).catch(error => {
+          alert('오류가 발생하였습니다.');
+        });
+			}
+
+			function fncChangeUpperCase(obj){
+				if($(obj).val() != ''){
+					const regex = /^[a-z|A-Z]+$/;
+					if(!regex.test($(obj).val())){
+						alert('영문만 입력해주세요.');
+						$(obj).val('');
+					}
+					else {
+						$(obj).val($(obj).val().toUpperCase());
+					}
+				}
+			}
+
+			function goList(){
+			  const upcdid = /*[[${upcdid}]]*/;
+			  const cddepth = /*[[${cddepth}]]*/;
+				location.href = '/code/popup/list/'+upcdid+'/'+cddepth;
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

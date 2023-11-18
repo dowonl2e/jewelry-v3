@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">거래처 등록</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal m10">
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col width="5%;"/>
+              <col width="10%;"/>
+              <col width="10%;"/>
+              <col width="10%;"/>
+            </colgroup>
+            <tbody>
+            <tr>
+              <th rowspan="2" class="text-center border-right">거래처</th>
+              <th colspan="3" class="text-center border-right">거래처 별명</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center" id="vender_nm_td"></td>
+            </tr>
+            <tr>
+              <th rowspan="4" class="text-center border-right">사업자</th>
+              <th colspan="3" class="text-center border-right">사업자명</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center" id="business_nm_td"></td>
+            </tr>
+            <tr>
+              <th colspan="3" class="text-center">대표자 연락처</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center" id="agent_cel_td"></td>
+            </tr>
+            <tr>
+              <th rowspan="4" class="text-center border-right">옵션</th>
+              <th colspan="3" class="text-center border-right">매입해리</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center" id="melt_cd_td"></td>
+            </tr>
+            <tr>
+              <th colspan="3" class="text-center">부가세 적용률</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center" id="vat_cd_td"></td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="text-center border-right">연락처</th>
+              <th colspan="1" class="text-center border-right">전화번호1</th>
+              <th colspan="1" class="text-center border-right">전화번호2</th>
+              <th colspan="1" class="text-center">팩스번호</th>
+            </tr>
+            <tr>
+              <td colspan="1" class="text-center border-right" id="vender_cel1_td"></td>
+              <td colspan="1" class="text-center border-right" id="vender_cel2_td"></td>
+              <td colspan="1" class="text-center" id="vender_fax_td"></td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="text-center border-right">담당자</th>
+              <th colspan="1" class="text-center border-right">이름</th>
+              <th colspan="1" class="text-center border-right">핸드폰</th>
+              <th colspan="1" class="text-center">이메일</th>
+            </tr>
+            <tr>
+              <td colspan="1" class="text-center" id="manager_nm_td"></td>
+              <td colspan="1" class="text-center" id="manager_cel_td"></td>
+              <td colspan="1" class="text-center" id="manager_email_td"></td>
+            </tr>
+            <tr>
+              <th rowspan="1" class="text-center border-right">통상처</th>
+              <td colspan="3" class="text-center" id="commerce_td"></td>
+            </tr>
+
+            <tr>
+              <th class="border-right border-bottom">비고</td>
+              <td colspan="3" class="border-bottom" id="etc_td"></td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="btn_wrap text-center">
+            <span id="modify-auth"></span>
+            <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			var codemap = {
+				[# th:each="code, loop : ${cdmapper}"]
+          "[(${code.cdId})]": "[(${code.cdNm})]",
+        [/]
+			};
+
+			window.onload = () => {
+				find();
+	  	}
+
+			function find() {
+        if(!isValidToken())
+          return false;
+
+				const venderno = /*[[${venderno}]]*/;
+				if ( !venderno ) {
+		    	return false;
+		    }
+
+				fetch(`/api/vender/`+venderno, {
+				  method: 'GET',
+				  headers: {
+				    'Authorization': getToken()
+				  }
+				}).then(response => {  //response에 VenderVO가 있다?
+		    	if (!response.ok) {
+						throw new Error('Request failed...');
+			    }
+		    	return response.json();
+
+		   	}).then(json => {
+		   	  if(checkNullVal(json.menuAuthResponseDto.viewAuth) != 'Y'){
+            altNoAuth();
+            fncParentRefresh();
+            fncClose();
+            return false;
+          }
+
+          if(checkNullVal(json.menuAuthResponseDto.modifyAuth) == 'Y'){
+            let modifyAuthBtn = `<a href="javascript: void(0);" onclick="goModify(); return false;" class="btn btn-primary waves-effect waves-light mlr5">수정</a>`;
+            document.getElementById('modify-auth').innerHTML = modifyAuthBtn;
+          }
+
+		   		document.getElementById('vender_nm_td').innerHTML = checkNullVal(json.venderNm); // innerHTML이 갖고온 놈을 위에 태그의 id안에 뿌려준다.
+		   		document.getElementById('business_nm_td').innerHTML = checkNullVal(json.businessNm);
+		   		document.getElementById('agent_cel_td').innerHTML = checkNullVal(json.agentCel);
+		   		document.getElementById('melt_cd_td').innerHTML = checkNullVal(codemap[checkNullVal(json.meltCd)]);
+		   		document.getElementById('vat_cd_td').innerHTML = checkNullVal(codemap[checkNullVal(json.vatCd)]);
+		   		document.getElementById('vender_cel1_td').innerHTML = checkNullVal(json.venderCel1);
+		   		document.getElementById('vender_cel2_td').innerHTML = checkNullVal(json.venderCel2);
+		   		document.getElementById('vender_fax_td').innerHTML = checkNullVal(json.venderFax);
+		   		document.getElementById('manager_nm_td').innerHTML = checkNullVal(json.managerNm);
+		   		document.getElementById('manager_cel_td').innerHTML = checkNullVal(json.managerCel);
+		   		document.getElementById('manager_email_td').innerHTML = checkNullVal(json.managerEmail);
+		   		document.getElementById('commerce_td').innerHTML = checkNullVal(json.commerce);
+		   		document.getElementById('etc_td').innerHTML = checkNullVal(json.etc);
+
+		   	}).catch(error => {
+		    	alert('거래처 정보를 찾을 수 없습니다.');
+		    	fncParentRefresh();
+		    	//fncClose();
+		   	});
+			}
+
+			function goModify() {
+			  const venderno = /*[[${venderno}]]*/;
+			  location.href = '/vender/popup/modify/'+venderno;
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

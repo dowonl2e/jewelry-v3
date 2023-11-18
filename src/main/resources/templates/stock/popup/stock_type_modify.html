@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">재고구분 변경</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal">
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col width="23%"/>
+              <col />
+            </colgroup>
+            <tbody>
+            <tr class="border-bottom">
+              <td class="bg-light border-right text-center">재고구분<span class="important"> *</span></td>
+              <td rowspan="2" class="text-center border-right">
+                <select name="stockTypeCd" id="stockTypeCd" class="form-control form-data">
+                  <option value="">선택</option>
+                  <option th:each="cditem : ${oclist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                </select>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="btn_wrap text-center">
+          <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">저장</a>
+          <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			function fncSave(){
+			  if(!isValidToken())
+          return false;
+
+        const stocksno = /*[[${param.stocksno}]]*/;
+        if(!stocksno)
+          return false;
+
+			  if($("#stockTypeCd").val() == ''){
+				  alert('변경할 재고구분을 선택해주세요.');
+				  $("#stockTypeCd").focus();
+				  return false;
+			  }
+
+				if(confirm('변경하시겠습니까?')){
+					const formData = new FormData();
+					$(".form-data").each(function(){
+						formData.append($(this).attr("name"), checkNullVal($(this).val()));
+					});
+          formData.append('stockNoArr[]', stocksno);
+
+					fetch('/api/stock/type/modify', {
+						method: 'PATCH',
+						headers: {
+						  'Authorization': getToken()
+						},
+						body: formData
+					}).then(response => {
+						if(!response.ok){
+							if(response.status == '403'){
+                altNoAuth();
+                fncParentRefresh();
+                fncClose();
+                return false;
+              }
+              else {
+                throw new Error('Request Failed...');
+              }
+						}
+						alert('변경되었습니다.');
+						fncParentRefresh();
+						fncClose();
+					}).catch(error => {
+						alert('오류가 발생하였습니다.');
+					});
+				}
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

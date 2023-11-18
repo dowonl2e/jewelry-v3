@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">거래처 등록</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal m10">
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col width="5%;"/>
+              <col width="10%;"/>
+              <col width="10%;"/>
+              <col width="10%;"/>
+            </colgroup>
+            <tbody>
+            <tr>
+              <th rowspan="2" class="text-center border-right">거래처</th>
+              <th colspan="3" class="text-center border-right">거래처 별명<span class="important"> *</span></th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center"><input type ="text" id="venderNm" class="form-control" maxlength='40'/></td>
+            </tr>
+            <tr>
+              <th rowspan="4" class="text-center border-right">사업자</th>
+              <th colspan="3" class="text-center border-right">사업자명</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center "><input type ="text" id="businessNm" class="form-control" maxlength='40'/></td>
+            </tr>
+            <tr>
+              <th colspan="3" class="text-center">대표자 연락처</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center"><input type ="text" id="agentCel" class="form-control" maxlength='40'/></td>
+            </tr>
+            <tr>
+              <th rowspan="4" class="text-center border-right">옵션</th>
+              <th colspan="3" class="text-center border-right">매입해리</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center">
+                <select id="meltCd" class="form-control">
+                  <option th:each="cditem : ${mtlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th colspan="3" class="text-center">부가세 적용률</th>
+            </tr>
+            <tr>
+              <td colspan="3" class="text-center">
+                <select id="vatCd" class="form-control">
+                  <option th:each="cditem : ${vtlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="text-center border-right">연락처</th>
+              <th colspan="1" class="text-center border-right">전화번호1</th>
+              <th colspan="1" class="text-center border-right">전화번호2</th>
+              <th colspan="1" class="text-center">팩스번호</th>
+            </tr>
+            <tr>
+              <td colspan="1" class="text-center border-right"><input type ="text" id="venderCel1" class="form-control" maxlength="13"/></td>
+              <td colspan="1" class="text-center border-right"><input type ="text" id="venderCel2" class="form-control" maxlength="13"/></td>
+              <td colspan="1" class="text-center"><input type ="text" id="venderFax" class="form-control" maxlength="13"/></td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="text-center border-right">담당자</th>
+              <th colspan="1" class="text-center border-right">이름</th>
+              <th colspan="1" class="text-center border-right">핸드폰</th>
+              <th colspan="1" class="text-center">이메일</th>
+            </tr>
+            <tr>
+              <td colspan="1" class="text-center"><input type ="text" id="managerNm" class="form-control" maxlength="40"/></td>
+              <td colspan="1" class="text-center"><input type ="text" id="managerCel" class="form-control" maxlength="13"/></td>
+              <td colspan="1" class="text-center"><input type ="text" id="managerEmail" class="form-control" maxlength="40"/></td>
+            </tr>
+            <tr>
+              <th rowspan="1" class="text-center border-right">통상처</th>
+              <td colspan="3" class="text-center"><input type ="text" id="commerce" class="form-control" maxlength="100"/></td>
+            </tr>
+
+            <tr>
+              <th class="border-right border-bottom">비고</td>
+              <td colspan="3" class="border-bottom">
+                <textarea id="etc" class="form-control" maxlength="650"></textarea>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="btn_wrap text-center">
+            <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">등록</a>
+            <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			function fncSave(){
+        if(!isValidToken())
+          return false;
+
+				if($("#venderNm").val() == ''){
+					alert('거래처별명을 입력해주세요.');
+					$("#venderNm").focus();
+					return false;
+				}
+
+				const form = document.getElementById('form');
+				const params = {
+						venderNm : form.venderNm.value,
+						businessNm : form.businessNm.value,
+						agentCel : form.agentCel.value,
+						meltCd : form.meltCd.value,
+						vatCd : form.vatCd.value,
+						venderCel1 : form.venderCel1.value,
+						venderCel2 : form.venderCel2.value,
+						venderFax : form.venderFax.value,
+						managerNm : form.managerNm.value,
+						managerCel : form.managerCel.value,
+						managerEmail : form.managerEmail.value,
+						commerce : form.commerce.value,
+						etc : form.etc.value
+				};
+
+				fetch('/api/vender/write', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': getToken()
+					},
+					body: JSON.stringify(params)
+				}).then(response => {
+					if(!response.ok){
+						if(response.status == '403'){
+              altNoAuth();
+              fncParentRefresh();
+              fncClose();
+              return false;
+            }
+            else {
+              throw new Error('Request Failed...');
+            }
+					}
+					alert('저장되었습니다.');
+					fncParentRefresh();
+					fncClose();
+				}).catch(error => {
+					alert('오류가 발생하였습니다.');
+				});
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

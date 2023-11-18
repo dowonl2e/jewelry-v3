@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <form id="searchForm" onsubmit="return false;" class="border-bottom">
+        <div class="mb20" id="adv-search">
+          <div class="form-inline">
+            <span class="mlr5">요청일</span>
+            <input type="date" id="searchStdt" class="form-control mlr5"/> ~
+            <input type="date" id="searchEddt" class="form-control mlr5"/>
+            <input type="number" id="recordCount" class="form-control mlr5" placeholder="행 개수" min="1" max="100" oninput="fncCheckZero(this);" style="width:100px;"/>
+            <input type="text" id="searchWord" class="form-control mlr5" placeholder="수리품명 입력" style="width: auto;" />
+            <button type="button" onclick="findAll(0);" class="btn btn-secondary">
+              <span aria-hidden="true" class="glyphicon glyphicon-search">검색</span>
+            </button>
+            <a href="javascript: void(0);" onclick="fncRefresh(); return false;" class="btn btn-warning waves-effect waves-light mlr5">새로고침</a>
+            <span id="write-auth1"></span>
+          </div>
+        </div>
+      </form>
+      <div class="table-responsive clearfix text-center border-bottom" id="list">
+
+      </div>
+
+      <div class="btn_wrap text-left mt-3">
+        <a href="javascript: void(0);" class="btn btn-success btn-circle btn-sm"><i class="fas fa-check"></i></a><span class="ml5">체크된 것</span>
+        <span id="modify-auth1"></span>
+        <span id="remove-auth1"></span>
+      </div>
+
+      <nav aria-label="Page navigation" class="text-center">
+        <ul class="pagination"></ul>
+      </nav>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+
+      var minNumberLen = 1;
+      var maxNumberLen = 100;
+
+      window.onload = () => {
+        setQueryStringParams();
+        findAll();
+        addEnterSearchEvent();
+      }
+
+      /**
+        * 키워드 - 엔터 검색 이벤트 바인딩
+        */
+      function addEnterSearchEvent() {
+        document.getElementById('searchWord').addEventListener('keyup', (e) => {
+          if (e.keyCode === 13) {
+            findAll(0);
+          }
+        });
+      }
+
+      function drawPages(params) {
+        if (!params) {
+          document.querySelector('.pagination').innerHTML = '';
+          return false;
+        }
+
+        let html = '';
+        const pagination = params;
+
+        let startPage = pagination.startPage;
+        let endPage = pagination.endPage;
+        let nextStartPage = pagination.endPage+1 >= pagination.totalPage ? pagination.totalPage : pagination.endPage+1;
+
+        // 첫 페이지, 이전 페이지
+        if (pagination.hasPrev) {
+          html += `
+            <li><a href="javascript:void(0)" onclick="findAll(0);" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+            <li><a href="javascript:void(0)" onclick="findAll(`+(startPage)+`);" aria-label="Previous"><span aria-hidden="true">&lsaquo;</span></a></li>
+          `;
+        }
+
+        // 페이지 번호
+        for (let i = startPage ; i < endPage ; i++) {
+          const active = ((i) === (pagination.currentPage-1)) ? 'class="active"' : '';
+          html += '<li '+active+'><a href="javascript:void(0)" onclick="findAll(\''+(i+1)+'\')">'+(i+1)+'</a></li>';
+        }
+
+        // 다음 페이지, 마지막 페이지
+        if (pagination.hasNext) {
+          html += `
+            <li><a href="javascript:void(0)" onclick="findAll(`+(nextStartPage)+`);" aria-label="Next"><span aria-hidden="true">&rsaquo;</span></a></li>
+            <li><a href="javascript:void(0)" onclick="findAll(`+(pagination.totalPage)+`);" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+          `;
+        }
+
+        document.querySelector('.pagination').innerHTML = html;
+      }
+
+      /**
+       * 게시글 리스트 조회
+       */
+      function findAll(page) {
+
+        const pageParams = Number(new URLSearchParams(location.search).get('page'));
+        page = page ? page : (pageParams ? pageParams : 1);
+
+        const form = document.getElementById('searchForm');
+
+        var params = {
+          currentPage: page
+          , searchStdt: form.searchStdt.value
+          , searchEddt: form.searchEddt.value
+          , recordCount: form.recordCount.value
+          , searchWord: form.searchWord.value
+        }
+        checkListNullParams(params);
+
+        const queryString = new URLSearchParams(params).toString();
+        const replaceUri = location.pathname + '?' + queryString;
+        history.replaceState({}, '', replaceUri);
+
+        getJson('/api/repair/list', params).then(response => {
+          let accessAuth = 'N', writeAuth = 'N', viewAuth = 'N', modifyAuth = 'N', removeAuth = 'N';
+          if (!Object.keys(response).length || response.menuAuthResponseDto == null) {
+            altNoAuth();
+            goMainPage();
+            return false;
+          }
+          else {
+            accessAuth = checkNullValR(response.menuAuthResponseDto.accessAuth, 'N');
+            if(accessAuth != 'Y'){
+              altNoAuth();
+              goMainPage();
+              return false;
+            }
+            writeAuth = checkNullValR(response.menuAuthResponseDto.writeAuth, 'N');
+            viewAuth = checkNullValR(response.menuAuthResponseDto.viewAuth, 'N');
+            modifyAuth = checkNullValR(response.menuAuthResponseDto.modifyAuth, 'N');
+            removeAuth = checkNullValR(response.menuAuthResponseDto.removeAuth, 'N');
+
+            //등록 권한 관련 버튼 체크
+            if(writeAuth == 'Y'){
+              let writeAuthBtn = `
+                <a href="javascript: void(0);" onclick="fncPopupWrite();" class="btn btn-primary waves-effect waves-light">수리등록</a>
+              `;
+              document.getElementById('write-auth1').innerHTML = writeAuthBtn;
+            }
+            else {
+              removeAuthButton('write-auth1');
+            }
+
+            if(modifyAuth == 'Y'){
+              let modifyAuthBtn = `
+                <a href="javascript: void(0);" onclick="fncRepairComplete(); return false;" class="btn btn-primary btn-icon-split btn-sm mlr5"><span class="text">수리완료</span></a>
+              `;
+              document.getElementById('modify-auth1').innerHTML = modifyAuthBtn;
+            }
+            else {
+              removeAuthButton('modify-auth1');
+            }
+
+            //삭제 권한 관련 버튼 체크
+            if(removeAuth == 'Y'){
+              let removeAuthBtn = `
+                <a href="javascript: void(0);" onclick="fncRemove(); return false;" class="btn btn-danger btn-icon-split btn-sm mlr5"><span class="text">삭제</span></a>
+              `;
+              document.getElementById('remove-auth1').innerHTML = removeAuthBtn;
+            }
+            else {
+              removeAuthButton('remove-auth1');
+            }
+          }
+
+          if (!Object.keys(response).length || response.list == null || response.list.length == 0) {
+            document.getElementById('list').innerHTML = '<div class="row row-cols-1" style="line-height:80px;"><div class="col">수리이력이 없습니다.</div></div>';
+            drawPages();
+            return false;
+          }
+
+          let html = '';
+          let num = response.params.totalCount - (response.params.currentPage-1) * response.params.recordCount;
+          response.list.forEach((obj, idx) => {
+            if(idx%4 == 0){
+              html += `<div class="row">`;
+            }
+            html += `
+                <div class="col-xl-3 col-lg-4 text-center text-black">
+                  <div class="card bg-light shadow rounded m10" style="min-height:385px;">
+                    <div class="row row-cols-1">
+                      <div class="col">
+                        <div class="m5 rounded">
+            `;
+            if(checkNullVal(obj.filePath) == ''){
+              html += `
+                <img src="/img/no-image.png" width="100%" style="height:200px;"/>
+              `;
+            }
+            else {
+              html += `
+                <img src="/file/image/display?filePath=`+checkNullVal(obj.filePath)+`&fileName=`+checkNullVal(obj.fileNm)+`" width="100%" style="height:200px;"/>
+              `;
+            }
+            html += `
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row row-cols-1 mlr5 mt5">
+                      <div class="col text-center">
+            `;
+            if(removeAuth == 'Y' || modifyAuth == 'Y'){
+              html += `
+                <input type="checkbox" id="repair_no_`+obj.repairNo+`" class="form-check-inline form-check" value="`+obj.repairNo+`"/>
+              `;
+            }
+            repairNm = checkSubstringNullVal(obj.repairNm,0,14);
+            if(viewAuth == 'Y'){
+              html += `
+                          <a href="javascript: void(0);" onclick="fncPopupView(\'`+obj.repairNo+`\'); return false;">
+                          ` + repairNm + `
+                          </a>
+              `;
+            }
+            else {
+              html += repairNm;
+
+            }
+            html += `
+                        </label>
+                      </div>
+                    </div>
+                    <div class="row mlr1 mtb5">
+                      <div class="col text-center">고객명 : `+checkSubstringNullVal(obj.customerNm,0,18)+`</div>
+                    </div>
+                    <div class="row mlr1 mtb5">
+                      <div class="col text-center">요청일 : `+checkSubstringNullVal(obj.repairReqDt,0,10)+`</div>
+                    </div>
+            `;
+            if(checkNullVal(obj.repairDueDt) != ''){
+              html += `
+                <div class="row mlr1 mtb5">
+                  <div class="col text-center">완료예정일 : `+checkSubstringNullVal(obj.repairDueDt,0,10)+`</div>
+                </div>
+            `;
+            }
+            if(checkNullVal(obj.repairResDt) != ''){
+              html += `
+                <div class="row mlr1 mtb5">
+                  <div class="col text-center">완료일 : `+checkSubstringNullVal(obj.repairResDt,0,10)+`</div>
+                </div>
+              `;
+            }
+            html += `
+                </div>
+              </div>
+            `;
+            if(idx > 0 && (idx+1)%4 == 0){
+              html += `</div>`;
+            }
+          });
+
+          document.getElementById('list').innerHTML = html;
+          drawPages(response.params);
+        });
+      }
+
+      /**
+       * 작성하기
+       */
+      function fncPopupWrite() {
+        var url = "./popup/write";
+        var name = "catalogWritePopup";
+        var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+      }
+
+      /**
+       * 수정하기
+       */
+      function fncPopupView(repairno) {
+        var url = "./popup/"+repairno;
+        var name = "repairViewPopup";
+        var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+      }
+
+      /**
+       * 수정하기
+       */
+      function fncPopupModify(catalogno) {
+        var url = "./popup/modify/"+catalogno;
+        var name = "catalogModifyPopup";
+        var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+      }
+
+      function fncRepairComplete(){
+        if(!isValidToken())
+          return false;
+
+        var checkcnt = 0;
+        $(".form-check").each(function(){
+          if($(this).is(":checked")){
+            checkcnt++;
+          }
+        });
+        if(checkcnt == 0){
+          alert('수리 완료할 이력을 선택해주세요.');
+          return false;
+        }
+
+        if(confirm('완료하시겠습니까?')){
+          const form = document.getElementById('searchForm');
+          const writeForm = new FormData(form);
+
+          const formData = new FormData();
+          $(".form-check").each(function(){
+            if($(this).is(":checked"))
+              formData.append("repairNoArr[]", checkNullVal($(this).val()));
+          });
+
+          fetch('/api/repair/repairs/complete', {
+            method: 'PATCH',
+            headers: {
+              'Authorization': getToken()
+            },
+            body: formData
+          }).then(response => {
+            if(!response.ok){
+              if(response.status == '403'){
+                altNoAuth();
+                refresh();
+                return false;
+              }
+              else {
+                throw new Error('Request Failed...');
+              }
+            }
+            alert('완료처리 되었습니다.');
+            refresh();
+          }).catch(error => {
+            alert('오류가 발생하였습니다.');
+          });
+        }
+      }
+
+      function fncRemove(){
+        if(!isValidToken())
+          return false;
+
+        var checkcnt = 0;
+        $(".form-check").each(function(){
+          if($(this).is(":checked")){
+            checkcnt++;
+          }
+        });
+        if(checkcnt == 0){
+          alert('삭제할 수리이력을 선택해주세요.');
+          return false;
+        }
+
+        if(confirm('삭제하시겠습니까?')){
+          const form = document.getElementById('searchForm');
+          const writeForm = new FormData(form);
+
+          const formData = new FormData();
+          $(".form-check").each(function(){
+            if($(this).is(":checked"))
+              formData.append("repairNoArr[]", checkNullVal($(this).val()));
+          });
+
+          fetch('/api/repair/repairs/remove', {
+            method: 'PATCH',
+            headers: {
+              'Authorization': getToken()
+            },
+            body: formData
+          }).then(response => {
+            if(!response.ok){
+              if(response.status == '403'){
+                altNoAuth();
+                refresh();
+                return false;
+              }
+              else {
+                throw new Error('Request Failed...');
+              }
+            }
+            alert('삭제되었습니다.');
+            refresh();
+          }).catch(error => {
+            alert('오류가 발생하였습니다.');
+          });
+        }
+      }
+
+      function refresh(){
+        findAll(/*[[${param.currentPage}]]*/);
+      }
+    /*]]>*/
+	</script>
+</th:block>
+</html>

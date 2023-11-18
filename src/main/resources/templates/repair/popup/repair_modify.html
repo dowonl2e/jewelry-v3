@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">수리 등록</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal">
+        <div class="row text-center border-bottom">
+          <div class="col bg-light" style="line-height:40px;">제품 사진</div>
+        </div>
+        <div class="row text-center">
+          <div class="col bg-light">
+            <label for="file" id="file-label" class="custom-file custom-file-label mt5">파일 첨부하기</label>
+            <input type="file" name="file" id="file" class="custom-file-input" style="display:none;"/>
+          </div>
+        </div>
+        <div class="row text-center">
+          <div class="col"><img id="preview" width="640px" height="480px" class="m10"/></div>
+        </div>
+
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col width="20%"/>
+              <col width="30%"/>
+              <col width="20%"/>
+              <col width="30%"/>
+            </colgroup>
+            <tr>
+              <th>고객번호</th>
+              <td class="text-center border-right">
+                <div class="input-group-append">
+                  <input type="text" name="customerNo" id="customerNo" class="form-control form-data mtb5" readonly="readonly"/>
+                  <i class="fas fa-search fa-sm ml5 mt15" onclick="fncCustomerListPop(); return false;"></i>
+                </div>
+              </td>
+              <th>고객명</th>
+              <td class="text-center">
+                <div class="input-group-append">
+                  <input type="text" name="customerNm" id="customerNm" class="form-control form-data mtb5" readonly="readonly"/>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th>연락처</th>
+              <td colspan="3" class="text-center">
+                <div class="input-group-append">
+                  <input type="text" name="customerCel" id="customerCel" class="form-control form-data mtb5" readonly="readonly"/>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th colspan="4">수리 정보</th>
+            </tr>
+            <tr>
+              <th>수리품명<span class="important"> *</span></th>
+              <td colspan="3"><input type="text" name="repairNm" id="repairNm" class="form-control form-data mtb5" maxlength="30"/></td>
+            </tr>
+            <tr>
+              <th>수리요청일</th>
+              <td><input type="date" name="repairReqDt" id="repairReqDt" class="form-control form-data mtb5" maxlength="10"/></td>
+              <th>수리완료예정일</th>
+              <td><input type="date" name="repairDueDt" id="repairDueDt" class="form-control form-data mtb5" maxlength="10"/></td>
+            </tr>
+            <tr>
+              <th>수리 완료일</th>
+              <td colspan="3" id="repairResDt_td"></td>
+            </tr>
+            <tr class="border-bottom">
+              <th>비고</th>
+              <td colspan="3"><textarea name="repairDesc" id="repairDesc" class="form-control form-data mtb5" maxlength="800"></textarea></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="btn_wrap text-center">
+          <span id="modify-auth1"></span>
+          <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+
+			$(document).ready(function(){
+				const inputElement = document.getElementById("file");
+				inputElement.addEventListener("change", readURL, false);
+				find();
+	  	});
+
+			function find() {
+        if(!isValidToken())
+          return false;
+
+				const repairno = /*[[${repairno}]]*/;
+				if ( !repairno ) {
+		    	return false;
+		    }
+
+				fetch(`/api/repair/`+repairno, {
+				  method: 'GET',
+				  headers: {
+				    'Authorization': getToken()
+				  }
+				}).then(response => {
+		    	if (!response.ok) {
+						throw new Error('Request failed...');
+			    }
+		    	return response.json();
+
+		   	}).then(json => {
+          if(checkNullVal(json.menuAuthResponseDto.modifyAuth) != 'Y'){
+            altNoAuth();
+            fncParentRefresh();
+            fncClose();
+            return false;
+		   	  }
+		   	  else {
+		   	    document.getElementById('modify-auth1').innerHTML = `
+		   	      <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">수정</a>
+		   	    `;
+		   	  }
+
+		   		const form = document.getElementById('form');
+
+          let filePath = checkNullVal(json.filePath);
+		   		let fileNm = checkNullVal(json.fileNm);
+
+		   		if(fileNm == '')
+		   			form.preview.src = '/img/no-image.png';
+		   		else
+		   			form.preview.src = '/file/image/display?filePath='+filePath+'&fileName='+fileNm;
+
+		   		form.customerNo.value = checkNullVal(json.customerNo);
+		   		form.customerNm.value = checkNullVal(json.customerNm);
+		   		form.customerCel.value = checkNullVal(json.customerCel);
+		   		form.repairNm.value = checkNullVal(json.repairNm);
+		   		form.repairReqDt.value = checkSubstringNullVal(json.repairReqDt,0,10);
+		   		form.repairDueDt.value = checkSubstringNullVal(json.repairDueDt,0,10);
+		   		document.getElementById('repairResDt_td').innerHTML = checkSubstringNullVal(json.repairResDt,0,10);
+		   		form.repairDesc.value = checkNullVal(json.repairDesc);
+
+		   	}).catch(error => {
+		    	alert('수리 정보를 찾을 수 없습니다.');
+		    	fncParentRefresh();
+		    	fncClose();
+		   	});
+			}
+
+			function readURL() {
+			  if (this.files && this.files[0]) {
+			    var reader = new FileReader();
+			    reader.onload = function(e) {
+			      document.getElementById('preview').src = e.target.result;
+			    };
+			    reader.readAsDataURL(this.files[0]);
+			    document.getElementById('file-label').innerHTML = this.files[0].name;
+			  } else {
+			    document.getElementById('preview').src = "";
+			    document.getElementById('file-label').innerHTML = '파일 첨부하기';
+			  }
+			}
+
+			function fncSave(){
+        if(!isValidToken())
+          return false;
+
+				if($("#repairNm").val() == ''){
+					alert('수리품명을 입력해주세요.');
+					$("#repairNm").focus();
+					return false;
+				}
+
+				const fileField = document.querySelector('input[type="file"]');
+				const formData = new FormData();
+				$(".form-data").each(function(){
+					formData.append($(this).attr("name"), checkNullVal($(this).val()));
+				});
+				//배열 데이터 넣기
+				formData.append("file", fileField.files[0]);
+
+        const repairno = /*[[${repairno}]]*/;
+				fetch('/api/repair/modify/'+repairno, {
+					method: 'PATCH',
+					headers: {
+					  'Authorization': getToken()
+					},
+					body: formData
+				}).then(response => {
+					if(!response.ok){
+						if(response.status == '403'){
+              altNoAuth();
+              fncParentRefresh();
+              fncClose();
+              return false;
+            }
+            else {
+              throw new Error('Request Failed...');
+            }
+					}
+					alert('저장되었습니다.');
+					fncParentRefresh();
+					fncClose();
+				}).catch(error => {
+					alert('오류가 발생하였습니다.');
+				});
+			}
+
+			function fncCustomerListPop(){
+				var url = "/customer/popup/list";
+	      var name = "customerListPopup";
+	      var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+	      window.open(url, name, option);
+			}
+
+		/*]]>*/
+  </script>
+</th:block>
+</html>

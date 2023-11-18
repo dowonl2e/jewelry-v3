@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">사용자 등록</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal m10">
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col width="20%;"/>
+              <col />
+              <col width="20%;"/>
+              <col />
+            </colgroup>
+            <tbody>
+            <tr>
+              <th class="text-center border-right">아이디<span class="important"> *</span></th>
+              <td colspan="3"><input type="text" id="userId" class="form-control" maxlength="20" oninput="checkEnglish(this);"/></td>
+            </tr>
+            <tr>
+              <th class="text-center border-right">비밀번호<span class="important"> *</span></th>
+              <td class="border-right"><input type="password" id="userPwd" class="form-control" maxlength="20" oninput="resetPwdChk();"/></td>
+              <th class="text-center border-right">비밀번호 확인</th>
+              <td>
+                <input type="password" id="userPwdChk" class="form-control" maxlength="20" oninput="checkPwd(this);"/>
+                <div class="mt10 blue" id="pwd_equal_txt"></div>
+              </td>
+            </tr>
+            <tr>
+              <th class="text-center border-right">이름<span class="important"> *</span></th>
+              <td colspan="3"><input type="text" id="userName" class="form-control" maxlength="30"/></td>
+            </tr>
+            <tr>
+              <th class="text-center border-right">연락처</th>
+              <td colspan="3"><input type="text" id="celnum" class="form-control" maxlength="13"/></td>
+            </tr>
+            <tr>
+              <th class="text-center border-right">이메일</th>
+              <td colspan="3"><input type="text" id="email" class="form-control" maxlength="30"/></td>
+            </tr>
+            <tr>
+              <th class="border-right">성별</th>
+              <td colspan="3" class="text-center">
+                <select id="gender" class="form-control">
+                  <option value="">선택</option>
+                  <option value="남">남</option>
+                  <option value="여">여</option>
+                </select>
+              </td>
+            </tr>
+            <tr class="border-bottom">
+              <th class="text-center border-right">사용여부</th>
+              <td colspan="3">
+                <input type="radio" name="useYn" id="use_yn_y" value="Y" checked="checked"/><label for="use_yn_y">&nbsp;사용</label>
+                <span class="ml10"><input type="radio" name="useYn" id="use_yn_n" value="N"/><label for="use_yn_n">&nbsp;미사용</label></span>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="btn_wrap text-center">
+            <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">등록</a>
+            <a href="javascript: void(0);" onclick="goList(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">목록</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+
+			function fncSave(){
+        if(!isValidToken())
+          return false;
+
+				if($("#userId").val() == ''){
+					alert('아이디를 입력해주세요.');
+					$("#userId").focus();
+					return false;
+				}
+
+				if($("#userPwd").val() == ''){
+					alert('비밀번호를 입력해주세요.');
+					$("#userPwd").focus();
+					return false;
+				}
+
+				if($("#userPwd").val() != $("#userPwdChk").val()){
+					alert('비밀번호가 일치하지 않습니다.');
+					$("#userPwdChk").focus();
+					return false;
+				}
+
+				if($("#userName").val() == ''){
+					alert('이름을 입력해주세요.');
+					$("#userName").focus();
+					return false;
+				}
+
+        if(confirm('등록하시겠습니까?')){
+          useYn = $("input:radio[name=useYn]:checked").val();
+          const form = document.getElementById('form');
+          const params = {
+            userId : form.userId.value,
+            userPwd : form.userPwd.value,
+            userName : form.userName.value,
+            celnum : form.celnum.value,
+            email : form.email.value,
+            gender : form.gender.value,
+            useYn : useYn
+          };
+
+          fetch('/api/user/write', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': getToken()
+            },
+            body: JSON.stringify(params)
+          }).then(response => {
+            if(!response.ok){
+              if(response.status == '403'){
+                altNoAuth();
+                goList();
+                return false;
+              }
+              else {
+                throw new Error('Request Failed...');
+              }
+            }
+            alert('저장되었습니다.');
+            goList();
+          }).catch(error => {
+            alert('오류가 발생하였습니다.');
+          });
+        }
+			}
+
+			function checkEnglish(obj){
+				if($(obj).val() != ''){
+					const regex = /^[a-z|A-Z]+$/;
+					if(!regex.test($(obj).val())){
+						alert('영문만 입력해주세요.');
+						$(obj).val('');
+					}
+				}
+			}
+			function checkPwd(obj){
+				if($("#userPwd").val() == $("#userPwdChk").val()){
+					$("#pwd_equal_txt").text('비밀번호가 일치합니다.');
+				}
+				else {
+					$("#pwd_equal_txt").text('');
+				}
+			}
+
+			function resetPwdChk(){
+				$("#userPwdChk").val('');
+			}
+
+			function goList(){
+				location.href = '/user/list' + location.search;
+			}
+
+		/*]]>*/
+  </script>
+</th:block>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<th:block th:replace="fragments/header_popup :: fragment-header-popup"></th:block>
+<body id="page-top">
+  <!-- Start of Page Wrapper -->
+  <div id="content-wrapper" class="d-flex flex-column">
+
+    <div id="content">
+      <div class="container-fluid">
+        <th:block layout:fragment="content"></th:block>
+      </div>
+    </div>
+  </div>
+  <!-- End of Page Wrapper -->
+  <script th:inline="javascript">
+    const uri = /*[[ ${#httpServletRequest.servletPath} ]]*/;
+    const uri2 = uri.substring(1, uri.length);
+  </script>
+</body>
+</html>

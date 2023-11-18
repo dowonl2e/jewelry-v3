@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary" id="upCdNm"></h6>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive clearfix">
+        <table class="table table-hover">
+          <thead>
+          <tr>
+            <th class="text-center">코드</th>
+            <th class="text-center">코드명</th>
+            <th class="text-center">사용여부</th>
+            <th class="text-center">등록자</th>
+            <th class="text-center">등록일</th>
+            <th class="text-center">하위코드</th>
+          </tr>
+          </thead>
+          <tbody id="list"></tbody>
+        </table>
+      </div>
+      <div class="text-center">
+        <span id="write-auth1"></span>
+        <a href="javascript: void(0);" onclick="fncClose();" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/**
+		 * 페이지 HTML 렌더링
+		 */
+		window.onload = () => {
+	    findAll();
+		}
+
+		/**
+		 * 게시글 리스트 조회
+		 */
+		function findAll() {
+
+		  const upCdId = /*[[${upcdid}]]*/;
+		  const cdDepth = /*[[${cddepth}]]*/;
+
+			getJson('/api/code/list/'+upCdId+'/'+cdDepth).then(response => {
+			  let writeAuth = 'N', viewAuth = 'N', modifyAuth = 'N', removeAuth = 'N';
+        if (!Object.keys(response).length || response.menuAuthResponseDto == null) {
+          altNoAuth();
+          fncParentRefresh();
+          fncClose();
+          return false;
+        }
+        else {
+          viewAuth = checkNullValR(response.menumenuAuthResponseDtoAuth.viewAuth, 'N');
+          if(viewAuth != 'Y'){
+            altNoAuth();
+            fncParentRefresh();
+            fncClose();
+            return false;
+          }
+          writeAuth = checkNullValR(response.menuAuthResponseDto.writeAuth, 'N');
+          modifyAuth = checkNullValR(response.menuAuthResponseDto.modifyAuth, 'N');
+          removeAuth = checkNullValR(response.menuAuthResponseDto.removeAuth, 'N');
+
+          //등록 권한 관련 버튼 체크
+          if(writeAuth == 'Y'){
+            let writeAuthBtn = `
+              <a href="javascript: void(0);" onclick="goWrite();" class="btn btn-primary waves-effect waves-light mlr5">코드추가</a>
+            `;
+            document.getElementById('write-auth1').innerHTML = writeAuthBtn;
+          }
+          else {
+            removeAuthButton('write-auth1');
+          }
+        }
+
+				document.getElementById('upCdNm').innerHTML = checkNullVal(response.vo.cdNm)+'('+upCdId+')';
+				if (!Object.keys(response).length || response.list == null || response.list.length == 0) {
+					document.getElementById('list').innerHTML = '<td colspan="6" class="text-center">등록된 코드가 없습니다.</td>';
+					return false;
+				}
+
+				let html = '';
+     		response.list.forEach((obj, idx) => {
+     			const viewUri = `/code/popup/modify/`+obj.cdId+`/`+obj.cdDepth;
+     			html += `
+      			<tr>
+  						<td class="text-center">`+checkNullVal(obj.cdId)+`</td>
+  						<td class="text-center bold">
+  				`;
+  				cdNm = checkNullVal(obj.cdNm);
+  				if(modifyAuth == 'Y'){
+						html += `		<a href="`+viewUri+`">`+cdNm+`</a>`;
+  				}
+  				else {
+  					html += cdNm;
+  				}
+  				html += `
+							</td>
+  						<td class="text-center">`+checkNullVal(obj.useYn)+`</td>
+  						<td class="text-center">`+checkNullVal(obj.inptNm)+`</td>
+  						<td class="text-center">`+checkSubstringNullVal(obj.inptDt,0,10)+`</td>
+  						<td class="text-center">
+  				`;
+  				if(viewAuth == 'Y'){
+  					html += `		<a href="javascript: void(0);" onclick="fncPopupSubCodeList(\'`+obj.cdId+`\'); return false;" class="btn btn-info">하위코드</a>`;
+  				}
+  				html += `
+ 							</td>
+      			</tr>
+     			`;
+     		});
+
+     		document.getElementById('list').innerHTML = html;
+			});
+		}
+
+		/**
+		 * 하위코드 팝업
+		 */
+		function fncPopupSubCodeList(up_cd_id) {
+		  const nextCdDepth = /*[[${cddepth+1}]]*/;
+		  var url = "/code/popup/list/"+up_cd_id+"/"+nextCdDepth;
+      var name = "subCodeListPopup"+up_cd_id;
+      var top = 100 + Number(nextCdDepth)*20;
+      var left = 200 + Number(nextCdDepth)*20;
+      var option = "width = 800, height = 500, top = "+top+", left = "+left+", location = no";
+      window.open(url, name, option);
+		}
+
+		/**
+		 * 작성하기
+		 */
+		function goWrite() {
+		  const upCdId = /*[[${upcdid}]]*/;
+		  const cdDepth = /*[[${cddepth}]]*/;
+	    location.href = '/code/popup/write/'+upCdId+'/'+cdDepth;
+		}
+
+		function fncClose() {
+	    self.close();
+		}
+	</script>
+</th:block>
+</html>

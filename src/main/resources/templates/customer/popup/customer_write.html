@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">고객 등록</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal m10">
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col width="10%;"/>
+              <col width="10%;"/>
+              <col />
+              <col width="10%;"/>
+              <col />
+              <col />
+              <col width="10%;"/>
+              <col />
+            </colgroup>
+            <tbody>
+            <tr>
+              <th rowspan="2" class="text-center border-right">관리매장</th>
+              <th colspan="4" class="text-center border-right">등록일<span class="important"> *</span></th>
+              <th colspan="3" class="text-center">매장<span class="important"> *</span></th>
+            </tr>
+            <tr>
+              <td colspan="4" class="border-right"><input type="date" id="regDt" class="form-control" maxlength="10"/></td>
+              <td colspan="3" class="text-center">
+                <select id="storeCd" class="form-control">
+                  <option th:each="cditem : ${stlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="text-center border-right">구분</th>
+              <th colspan="7" class="text-center border-right">계약구분<span class="important"> *</span></th>
+            </tr>
+            <tr>
+              <td colspan="7" class="text-center">
+                <select id="contractCd" class="form-control">
+                  <option th:each="cditem : ${ctlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <th rowspan="2" class="border-right">고객</th>
+              <th></th>
+              <th>이름</th>
+              <th>성별</th>
+              <th>연락처</th>
+              <th>생일</th>
+              <th>음력</th>
+              <th>이메일</th>
+            </tr>
+            <tr>
+              <th class="border-right">계약고객</th>
+              <td class="border-right"><input type="text" id="contractorNm" class="form-control" maxlength="20"/></td>
+              <td class="border-right">
+                <select id="contractorGen" class="form-control">
+                  <option value=""></option>
+                  <option value="남">남</option>
+                  <option value="여">여</option>
+                </select>
+              </td>
+              <td class="border-right"><input type="text" id="contractorCel" class="form-control" maxlength="30"/></td>
+              <td class="border-right"><input type="date" id="contractorBirth" class="form-control"/></td>
+              <td class="border-right">
+                <select id="contractorLunar" class="form-control">
+                  <option value=""></option>
+                  <option value="Y">Y</option>
+                  <option value="N">N</option>
+                </select>
+              </td>
+              <td><input type="text" id="contractorEmail" class="form-control"/></td>
+            </tr>
+            <tr>
+              <th rowspan="3" class="border-right">주소</th>
+              <th class="border-right">우편번호</th>
+              <td colspan="6"><input type="text" id="zipcode" class="form-control" style="width: 100px;" maxlength="10"/></td>
+            </tr>
+            <tr>
+              <th class="border-right">기본주소</th>
+              <td colspan="6"><input type="text" id="address1" class="form-control" maxlength="100"/></td>
+            </tr>
+            <tr>
+              <th class="border-right">나머지</th>
+              <td colspan="6"><input type="text" id="address2" class="form-control" maxlength="100"/></td>
+            </tr>
+            <tr>
+              <th class="border-right border-bottom">비고</th>
+              <td colspan="7" class="border-bottom">
+                <textarea id="etc" class="form-control" maxlength="600"></textarea>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+          <div class="btn_wrap text-center">
+            <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">등록</a>
+            <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+
+			function fncSave(){
+        if(!isValidToken())
+          return false;
+
+        if($("#regDt").val() == ''){
+          alert('등록일을 입력해주세요.');
+          $("#regDt").focus();
+          return false;
+        }
+        if($("#storeCd").val() == ''){
+          alert('매장을 선택해주세요.');
+          $("#storeCd").focus();
+          return false;
+        }
+        if($("#contractCd").val() == ''){
+          alert('계약구분을 선택해주세요.');
+          $("#contractCd").focus();
+          return false;
+        }
+
+        const form = document.getElementById('form');
+        const params = {
+          regDt : form.regDt.value,
+          storeCd : form.storeCd.value,
+          contractCd : form.contractCd.value,
+          contractorNm : form.contractorNm.value,
+          contractorGen : form.contractorGen.value,
+          contractorCel : form.contractorCel.value,
+          contractorBirth : form.contractorBirth.value,
+          contractorLunar : form.contractorLunar.value,
+          contractorEmail : form.contractorEmail.value,
+          zipcode : form.zipcode.value,
+          address1 : form.address1.value,
+          address2 : form.address2.value,
+          etc : form.etc.value
+        };
+
+        fetch('/api/customer/write', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': getToken()
+          },
+          body: JSON.stringify(params)
+        }).then(response => {
+          if(!response.ok){
+            if(response.status == '403'){
+              altNoAuth();
+              fncParentRefresh();
+              fncClose();
+              return false;
+            }
+            else {
+              throw new Error('Request Failed...');
+            }
+          }
+          alert('저장되었습니다.');
+          fncParentRefresh();
+          fncClose();
+        }).catch(error => {
+          alert('오류가 발생하였습니다.');
+        });
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

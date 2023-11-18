@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">재고 등록</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal">
+        <div class="table-responsive clearfix">
+          <table class="table border-bottom">
+            <colgroup>
+              <col width="20%"/>
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+            </colgroup>
+            <tbody>
+              <tr>
+                <td rowspan="8" class="text-center border-right">
+                  <label for="file"><img src="/img/no-image.png" id="preview" width="350px" height="300px"/></label>
+                  <input type="file" name="file" id="file" class="custom-file-input" style="display:none;"/>
+                </td>
+                <td colspan="7" class="bg-light border-right text-center">등록일<span class="important"> *</span></td>
+                <td colspan="8" class="bg-light border-right text-center">현 재고구분<span class="important"> *</span></td>
+              </tr>
+              <tr>
+                <td colspan="7" class="text-center border-right">
+                  <input type="date" name="regDt" id="regDt" class="form-control form-data mtb5" maxlength="10"/>
+                </td>
+                <td colspan="8" class="text-center border-right mtb5">
+                  <select name="stockTypeCd" id="stockTypeCd" class="form-control form-data">
+                    <option th:each="cditem : ${oclist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td colspan="7" class="bg-light border-right text-center">입고매장<span class="important"> *</span></td>
+                <td colspan="8" class="bg-light text-center">실질 구매 순금시세(g)</td>
+              </tr>
+              <tr class="border-bottom">
+                <td colspan="7" class="text-center border-right">
+                  <select name="storeCd" id="storeCd" class="form-control form-data">
+                    <option th:each="cditem : ${stlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                  </select>
+                </td>
+                <td colspan="8" class="text-center">
+                  <input type="number" name="realPchGoldPrice" id="realPchGoldPrice" class="form-control form-data mtb5"/>
+                </td>
+              </tr>
+              <tr>
+                <th class="bg-light text-center border-right small">등록일</th>
+                <th class="bg-light text-center border-right small">모델</th>
+                <th class="bg-light text-center border-right small">분류</th>
+                <th class="bg-light text-center border-right small">재질</th>
+                <th class="bg-light text-center border-right small">색상</th>
+                <th class="bg-light text-center border-right small">메.스톤</th>
+                <th class="bg-light text-center border-right small">보.스톤</th>
+                <th class="bg-light text-center border-right small">사이즈</th>
+                <th class="bg-light text-center border-right small">기타설명</th>
+                <th class="bg-light text-center border-right small">중량</th>
+                <th class="bg-light text-center border-right small">구매공임</th>
+                <th class="bg-light text-center border-right small">구매원가</th>
+                <th class="bg-light text-center border-right small">기준원가</th>
+                <th class="bg-light text-center border-right small">배수</th>
+                <th class="bg-light text-center border-right small">TAG가</th>
+              </tr>
+              <th:block th:each="stock, idx : ${prevStockList}">
+                <tr>
+                  <td class="text-center border-right small" th:id="'prevRegDt_'+${idx}" th:text="${#strings.substring(stock.regDt,0,10)}"></td>
+                  <td class="text-center border-right small" th:id="'prevModelId_'+${idx}" th:text="${stock.modelId}"></td>
+                  <td class="text-center border-right small" th:id="'prevStockTypeCd_'+${idx}">
+                    <th:block th:each="oc : ${oclist}">
+                      <span th:if="${stock.stockTypeCd == oc.cdId}" th:text="${oc.cdNm}"></span>
+                    </th:block>
+                  </td>
+                  <td class="text-center border-right small" th:id="'prevMaterialCd_'+${idx}">
+                    <th:block th:each="sm : ${smlist}">
+                      <span th:if="${stock.materialCd == sm.cdId}" th:text="${sm.cdNm}"></span>
+                    </th:block>
+                  </td>
+                  <td class="text-center border-right small" th:id="'prevColorCd_'+${idx}">
+                    <th:block th:each="sc : ${sclist}">
+                      <span th:if="${stock.colorCd == sc.cdId}" th:text="${sc.cdNm}"></span>
+                    </th:block>
+                  </td>
+                  <td class="text-center border-right small" th:id="'prevMainStoneType_'+${idx}" th:text="${stock.mainStoneType}"></td>
+                  <td class="text-center border-right small" th:id="'prevSubStoneType_'+${idx}" th:text="${stock.subStoneType}"></td>
+                  <td class="text-center border-right small" th:id="'prevSize_'+${idx}" th:text="${stock.size}"></td>
+                  <td class="text-center border-right small" th:id="'prevStockDesc_'+${idx}" th:text="${stock.stockDesc}"></td>
+                  <td class="text-center border-right small" th:id="'prevPerWeightGram_'+${idx}" th:text="${stock.perWeightGram}"></td>
+                  <td class="text-center border-right small" th:id="'prevPerPrice_'+${idx}" th:with="prevPerPrice = ${stock.perPriceMain}">
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceSub"/>
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceBasic"/>
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceAdd"/>
+                    <th:block th:if="${prevPerPrice == 0}">
+                      <th:block th:with="prevPerPrice = ''"></th:block>
+                    </th:block>
+                    <th:block th:if="${prevPerPrice != 0}">
+                      <th:block th:with="prevPerPrice = (prevPerPrice+'')"></th:block>
+                    </th:block>
+                    <span th:text="${prevPerPrice}"/>
+                  </td>
+                  <td class="text-center border-right small" th:id="'prevPerPriceGoldReal_'+${idx}" th:with="weight = 0, prevPerPrice = ${stock.perPriceMain}">
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceSub"/>
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceBasic"/>
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceAdd"/>
+                    <th:block th:if="${prevPerPrice == 0}">
+                      <th:block th:with="prevPerPrice=''"></th:block>
+                    </th:block>
+                    <th:block th:if="${prevPerPrice != 0}">
+                      <th:block th:with="prevPerPrice = (prevPerPrice+'')"></th:block>
+                    </th:block>
+                    <th:block th:if="${stock.materialCd == 'SM01'}">
+                      <span th:text="${stock.realPchGoldPrice * 0.6435 + prevPerPrice}"/>
+                    </th:block>
+                    <th:block th:if="${stock.materialCd == 'SM02'}">
+                      <span th:text="${stock.realPchGoldPrice * 0.825 + prevPerPrice}"/>
+                    </th:block>
+                    <th:block th:if="${stock.materialCd == 'SM03'}">
+                      <span th:text="${stock.realPchGoldPrice * 1 + prevPerPrice}"/>
+                    </th:block>
+                  </td>
+                  <td class="text-center border-right small" th:id="'prevPerPriceGoldStdd_'+${idx}"th:with="prevPerPrice = ${stock.perPriceMain}">
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceSub"/>
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceBasic"/>
+                    <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceAdd"/>
+                    <th:block th:if="${prevPerPrice == 0}">
+                      <th:block th:with="prevPerPrice = ''"></th:block>
+                    </th:block>
+                    <th:block th:if="${prevPerPrice != 0}">
+                      <th:block th:with="prevPerPrice = (prevPerPrice+'')"></th:block>
+                    </th:block>
+                    <span th:text="${prevPerPrice}"/>
+                  </td>
+                  <td class="text-center border-right small" th:id="'prevMultipleCnt_'+${idx}" th:text="${stock.multipleCnt}"></td>
+                  <td class="text-center small" th:id="'prevConsumerPrice_'+${idx}"
+                      th:with="prevConsumerPrice = ${stock.multipleCnt}, prevPerPrice = ${stock.perPriceMain}">
+                    <th:block th:if="${prevConsumerPrice != null}">
+                      <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceSub"/>
+                      <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceBasic"/>
+                      <th:block th:with="prevPerPrice = prevPerPrice+stock.perPriceAdd"/>
+                      <th:block th:if="${prevPerPrice == 0}">
+                        <th:block th:with="prevPerPrice = ''"></th:block>
+                      </th:block>
+                      <th:block th:if="${prevPerPrice != 0}">
+                        <th:block th:with="prevPerPrice = (prevPerPrice+'')"></th:block>
+                      </th:block>
+                      <span th:text="${prevConsumerPrice*prevPerPrice}"></span>
+                    </th:block>
+                  </td>
+                </tr>
+              </th:block>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-responsive clearfix mt-3">
+          <table class="table border-bottom" style="min-width:180%; overflow-x:scroll;">
+            <colgroup>
+              <col width="2%"/>
+              <col width="3%"/>
+              <col width="4.5%"/>
+              <col width="4.5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col />
+              <col width="3.5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="5%"/>
+              <col width="4%"/>
+              <col width="5%"/>
+            </colgroup>
+            <thead>
+            <tr>
+              <th rowspan="2" class="text-center border-right">No</th>
+              <th rowspan="2" class="text-center border-right">취소</th>
+              <th rowspan="2" class="text-center border-right">모델<br/>번호<span class="important"> *</span></th>
+              <th rowspan="2" class="text-center border-right">매입처</th>
+              <th rowspan="2" class="text-center border-right">재질</th>
+              <th rowspan="2" class="text-center border-right">색상</th>
+              <th colspan="2" class="text-center border-right">스톤</th>
+              <th rowspan="2" class="text-center border-right">사이즈</th>
+              <th rowspan="2" class="text-center border-right">기타설명</th>
+              <th rowspan="2" class="text-center border-right">수량</th>
+              <th colspan="2" class="text-center border-right">개당중량(g)</th>
+              <th colspan="4" class="text-center border-right">개당구매가(공임)</th>
+              <th colspan="2" class="text-center border-right">개당구매가(금값포함)</th>
+              <th rowspan="2" class="text-center border-right">배수</th>
+              <th rowspan="2" class="text-center">소비자가<br/>(TAG가)</th>
+            </tr>
+            <tr>
+              <th class="text-center border-right">메인</th>
+              <th class="text-center border-right">보조</th>
+              <th class="text-center border-right">중량</th>
+              <th class="text-center border-right">순금</th>
+              <th class="text-center border-right">기본</th>
+              <th class="text-center border-right">추가</th>
+              <th class="text-center border-right">메인</th>
+              <th class="text-center border-right">보조</th>
+              <th class="text-center border-right">실질</th>
+              <th class="text-center border-right">기준</th>
+            </tr>
+            </thead>
+            <tbody>
+              <th:block th:each="idx : ${#numbers.sequence(0,29)}">
+                <tr>
+                  <td class="text-center border-right" th:text="${idx+1}"></td>
+                  <td class="text-center border-right">
+                    <a href="#" th:onclick="fncValueInit([[${idx}]]); return false;" class="btn btn-danger btn-circle btn-sm"><i class="fas fa-trash"></i></a>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="hidden" name="catalogNoArr" th:id="'catalogNo_'+${idx}" class="form-data form-multi"/>
+                    <div class="input-group-append">
+                      <input type="text" name="modelIdArr" th:id="'modelId_'+${idx}" class="form-control form-multi mtb5 beadcnt" readonly="readonly"/>
+                      <i class="fas fa-search fa-sm ml5 mt15" th:onclick="fncCatalogListPop([[${idx}]]); return false;"></i>
+                    </div>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="hidden" name="venderNoArr" th:id="'venderNo_'+${idx}" class="form-data form-multi"/>
+                    <div class="input-group-append">
+                      <input type="text" name="venderNmArr" th:id="'venderNm_'+${idx}" class="form-control form-multi mtb5 beadcnt" readonly="readonly"/>
+                      <i class="fas fa-search fa-sm ml5 mt15" th:onclick="fncVenderListPop([[${idx}]]); return false;"></i>
+                    </div>
+                  </td>
+                  <td class="text-center border-right">
+                    <select name="materialCdArr" th:id="'materialCd_'+${idx}" class="form-control materialcd form-multi mtb5">
+                      <option value="">선택</option>
+                      <option th:each="cditem : ${smlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                    </select>
+                  </td>
+                  <td class="text-center border-right">
+                    <select name="colorCdArr" th:id="'colorCd_'+${idx}" class="form-control form-multi mtb5">
+                      <option value="">선택</option>
+                      <option th:each="cditem : ${sclist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                    </select>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="text" name="mainStoneTypeArr" th:id="'mainStoneType_'+${idx}" class="form-control form-multi mtb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="text" name="subStoneTypeArr" th:id="'subStoneType_'+${idx}" class="form-control form-multi mtb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="text" name="sizeArr" th:id="'size_'+${idx}" class="form-control form-multi mtb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="text" name="stockDescArr" th:id="'stockDesc_'+${idx}" class="form-control form-multi mtb5" maxlength="500"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="number" name="quantityArr" th:id="'quantity_'+${idx}" class="form-control form-multi mtb5" value="1" min="1"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="number" name="perWeightGramArr" th:id="'perWeightGram_'+${idx}" class="form-control form-multi perweightgram tb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="text" th:id="'perWeightGold_'+${idx}" class="form-control perweightgold mtb5" disabled="disabled"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="number" name="perPriceBasicArr" th:id="'perPriceBasic_'+${idx}" class="form-control form-multi perpricebasic mtb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="number" name="perPriceAddArr" th:id="'perPriceAdd_'+${idx}" class="form-control form-multi perpriceadd mtb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="number" name="perPriceMainArr" th:id="'perPriceMain_'+${idx}" class="form-control form-multi perpricemain mtb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="number" name="perPriceSubArr" th:id="'perPriceSub_'+${idx}" class="form-control form-multi perpricesub mtb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="text" th:id="'perPriceGoldReal_'+${idx}" class="form-control form-multi perpricegoldreal mtb5" disabled="disabled"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="text" th:id="'perPriceGoldStdd_'+${idx}" class="form-control perpricegoldstdd mtb5" disabled="disabled"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="number" name="multipleCntArr" th:id="'multipleCnt_'+${idx}" class="form-control multiplecnt form-multi mtb5" maxlength="20"/>
+                  </td>
+                  <td class="text-center border-right">
+                    <input type="number" th:id="'consumerPrice_'+${idx}" class="form-control consumerprice mtb5" disabled="disabled"/>
+                  </td>
+                </tr>
+              </th:block>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="btn_wrap text-center">
+          <span id="modify-auth"></span>
+          <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			$(document).ready(function(){
+				const inputElement = document.getElementById("file");
+				inputElement.addEventListener("change", readURL, false);
+				find();
+
+				$("#realPchGoldPrice, .perpricebasic, .perpriceadd, .perpricemain, .perpricesub, .perweightgram, .materialcd, .multiplecnt").on('change keyup', function() {
+					$(".perweightgram").each(function(idx){
+						//실질 구매 순금시세----------------------------------------------------------------------------------------------------------------
+						realPchGoldPriceSum = $("#realPchGoldPrice").val() == '' ? 0 : Number($("#realPchGoldPrice").val());
+						//실질 구매 순금시세 끝--------------------------------------------------------------------------------------------------------------
+
+						//개당 구매가 순금계산---------------------------------------------------------------------------------------------------------------
+						weight = 0;
+						goldWeight = 0;
+						perWeightGram = $(".perweightgram").eq(idx).val() == '' ? 0 : Number($(".perweightgram").eq(idx).val());
+
+						//재질별 중량 체크
+						if($(".materialcd").eq(idx).val() == 'SM01') weight = 0.6435;
+						else if($(".materialcd").eq(idx).val() == 'SM02') weight = 0.825;
+						else if($(".materialcd").eq(idx).val() == 'SM03') weight = 1;
+						else weight = 0;
+
+						goldWeight = perWeightGram * weight;
+
+						if(goldWeight == 0 || goldWeight == 0.0) $(".perweightgold").eq(idx).val('');
+						else $(".perweightgold").eq(idx).val(goldWeight.toFixed(2));
+						//개당 구매가 순금계산 끝-------------------------------------------------------------------------------------------------------------
+
+						realPchGoldPriceSum *= goldWeight;
+
+						//개당 구매가(공임)-----------------------------------------------------------------------------------------------------------------
+						perPriceGoldStddSum = 0;
+						perPriceGoldStddSum += $(".perpricebasic").eq(idx).val() == '' ? 0 : Number($(".perpricebasic").eq(idx).val());
+						perPriceGoldStddSum += $(".perpriceadd").eq(idx).val() == '' ? 0 : Number($(".perpriceadd").eq(idx).val());
+						perPriceGoldStddSum += $(".perpricemain").eq(idx).val() == '' ? 0 : Number($(".perpricemain").eq(idx).val());
+						perPriceGoldStddSum += $(".perpricesub").eq(idx).val() == '' ? 0 : Number($(".perpricesub").eq(idx).val());
+
+						if(perPriceGoldStddSum == 0 || perPriceGoldStddSum == 0.0) $(".perpricegoldstdd").eq(idx).val('');
+						else $(".perpricegoldstdd").eq(idx).val(perPriceGoldStddSum+'');
+						//개당 구매가(공임) 끝---------------------------------------------------------------------------------------------------------------
+
+						realPchGoldPriceSum += perPriceGoldStddSum;
+
+						if(realPchGoldPriceSum == 0 || realPchGoldPriceSum == 0.0) $(".perpricegoldreal").eq(idx).val('');
+						else $(".perpricegoldreal").eq(idx).val(realPchGoldPriceSum+'');
+
+						multipleCnt = $(".multiplecnt").eq(idx).val() == '' ? 0 : Number($(".multiplecnt").eq(idx).val());
+						consumerPrice = perPriceGoldStddSum * multipleCnt;
+
+						if(consumerPrice == 0 || consumerPrice == 0.0) $(".consumerprice").eq(idx).val('');
+						else $(".consumerprice").eq(idx).val(consumerPrice+'');
+
+					});
+				});
+			});
+
+			function find() {
+        if(!isValidToken())
+          return false;
+
+				const stockno = /*[[${stockno}]]*/;
+				if ( !stockno ) {
+		    	return false;
+		    }
+
+				fetch(`/api/stock/`+stockno, {
+				  method: 'GET',
+				  headers: {
+				    'Authorization': getToken()
+				  }
+				}).then(response => {
+		    	if (!response.ok) {
+						throw new Error('Request failed...');
+			    }
+		    	return response.json();
+
+		   	}).then(json => {
+		   	  if(checkNullVal(json.menuAuthResponseDto.modifyAuth) != 'Y'){
+            altNoAuth();
+            fncParentRefresh();
+            fncClose();
+            return false;
+          }
+          else {
+            let modifyAuthBtn = `<a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">수정</a>`;
+            document.getElementById('modify-auth').innerHTML = modifyAuthBtn;
+          }
+
+		   		let filePath = checkNullVal(json.filePath);
+		   		let fileNm = checkNullVal(json.fileNm);
+
+		   		if(filePath == '')
+		   			form.preview.src = '/img/no-image.png';
+		   		else
+		   			form.preview.src = '/file/image/display?filePath='+filePath+'&fileName='+fileNm;
+
+		   		form.regDt.value = checkSubstringNullVal(json.regDt,0,10);
+		   		form.storeCd.value = checkNullVal(json.storeCd);
+		   		form.stockTypeCd.value = checkNullVal(json.stockTypeCd);
+
+		   		form.realPchGoldPrice.value = checkNullVal(json.realPchGoldPrice);
+
+		   		form.catalogNo_0.value = checkNullVal(json.catalogNo);
+		   		form.modelId_0.value = checkNullVal(json.modelId);
+		   		form.venderNo_0.value = checkNullVal(json.venderNo);
+		   		form.venderNm_0.value = checkNullVal(json.venderNm);
+
+		   		form.materialCd_0.value = checkNullVal(json.materialCd);
+		   		form.colorCd_0.value = checkNullVal(json.colorCd);
+		   		form.quantity_0.value = checkNullVal(json.quantity);
+		   		form.mainStoneType_0.value = checkNullVal(json.mainStoneType);
+		   		form.subStoneType_0.value = checkNullVal(json.subStoneType);
+		   		form.size_0.value = checkNullVal(json.size);
+		   		form.stockDesc_0.value = checkNullVal(json.stockDesc);
+		   		form.perWeightGram_0.value = checkNullVal(json.perWeightGram);
+
+		   		materialCd = checkNullVal(json.materialCd);
+		   		weight = 0;
+		   		if(materialCd == 'SM01') weight = 0.6435;
+					else if(materialCd == 'SM02') weight = 0.825;
+					else if(materialCd == 'SM03') weight = 1;
+
+		   		perWeightGram = Number(checkNullValR(json.perWeightGram,'0'));
+
+		   		//재질중량(g) 순금 계산
+		   		perGoldWeight = perWeightGram * weight;
+
+		   		form.perWeightGold_0.value = (perGoldWeight == 0 || perGoldWeight == 0.0 ? '' : perGoldWeight.toFixed(2));
+
+		   		form.perPriceBasic_0.value = checkNullVal(json.perPriceBasic);
+		   		form.perPriceAdd_0.value = checkNullVal(json.perPriceAdd);
+		   		form.perPriceMain_0.value = checkNullVal(json.perPriceMain);
+		   		form.perPriceSub_0.value = checkNullVal(json.perPriceSub);
+
+		   		perPriceBasic = Number(checkNullValR(json.perPriceBasic,'0'));
+		   		perPriceAdd = Number(checkNullValR(json.perPriceAdd,'0'));
+		   		perPriceMain = Number(checkNullValR(json.perPriceMain,'0'));
+		   		perPriceSub = Number(checkNullValR(json.perPriceSub,'0'));
+
+		   		//개당구매가(공임) 합산
+		   		perPriceGoldStdd = (perPriceBasic + perPriceAdd + perPriceMain + perPriceSub);
+
+		   		perPriceGoldReal = 0;
+		   		realPchGoldPrice = Number(checkNullValR(json.realPchGoldPrice,'0'));
+
+		   		perPriceGoldReal = realPchGoldPrice*perGoldWeight;
+		   		perPriceGoldReal += perPriceGoldStdd;
+
+		   		form.perPriceGoldReal_0.value = perPriceGoldReal;
+
+		   		form.perPriceGoldStdd_0.value = (perPriceGoldStdd == 0 || perPriceGoldStdd == 0.0 ? '' : (perPriceGoldStdd+''));
+
+		   		form.multipleCnt_0.value = checkNullVal(json.multipleCnt);
+
+		   		multipleCnt = Number(checkNullValR(json.multipleCnt,'1'));
+					comsumerPrice = perPriceGoldStdd * multipleCnt;
+		   		form.consumerPrice_0.value = (comsumerPrice == 0 || comsumerPrice == 0.0 ? '' : (comsumerPrice+''));
+
+		   	}).catch(error => {
+		    	alert('재고 정보를 찾을 수 없습니다.');
+		    	fncParentRefresh();
+		    	//fncClose();
+		   	});
+			}
+
+			function readURL() {
+			  if (this.files && this.files[0]) {
+			    var reader = new FileReader();
+			    reader.onload = function(e) {
+			      document.getElementById('preview').src = e.target.result;
+			    };
+			    reader.readAsDataURL(this.files[0]);
+			    document.getElementById('file-label').innerHTML = this.files[0].name;
+			  } else {
+			    document.getElementById('preview').src = "";
+			    document.getElementById('file-label').innerHTML = '파일 첨부하기';
+			  }
+			}
+
+			function fncSave(){
+				if(!isValidToken())
+          return false;
+
+				if($("#regDt").val() == ''){
+					alert('등록일을 입력해주세요.');
+					$("#regDt").focus();
+					return false;
+				}
+				if($("#stockTypeCd").val() == ''){
+					alert('현 재고구분을 선택해주세요.');
+					$("#stockTypeCd").focus();
+					return false;
+				}
+
+				var catalogflag = false;
+				$("input[name=catalogNoArr]").each(function(){
+					if($(this).val() != '' && Number($(this).val()) > 0) {
+						catalogflag = true;
+					}
+				});
+
+				if(catalogflag == false){
+					alert('1개 이상의 모델을 선택해주세요.');
+					$("input[name=catalogNoArr]").eq(0).focus();
+					return false;
+				}
+
+				const fileField = document.querySelector('input[type="file"]');
+
+				const formData = new FormData();
+				$(".form-data").each(function(){
+					formData.append($(this).attr("name"), checkNullVal($(this).val()));
+				});
+				$(".form-multi").each(function(){
+					formData.append($(this).attr("name")+'[]', checkNullVal($(this).val()));
+				});
+
+				formData.append("file", fileField.files[0]);
+
+				const stockno = /*[[${stockno}]]*/;
+				fetch('/api/stock/modify/'+stockno, {
+					method: 'PATCH',
+					headers: {
+					  'Authorization': getToken()
+					},
+					body: formData
+				}).then(response => {
+					if(!response.ok){
+						if(response.status == '403'){
+              altNoAuth();
+              fncParentRefresh();
+              fncClose();
+              return false;
+            }
+            else {
+              throw new Error('Request Failed...');
+            }
+					}
+					alert('저장되었습니다.');
+					fncParentRefresh();
+					fncClose();
+				}).catch(error => {
+					alert('오류가 발생하였습니다.');
+				});
+			}
+
+			function fncValueInit(idx){
+				$("#catalogNo_"+idx).val('');
+				$("#modelId_"+idx).val('');
+				$("#venderNo_"+idx).val('');
+				$("#venderNm_"+idx).val('');
+				$("#materialCd_"+idx).val('');
+				$("#colorCd_"+idx).val('');
+				$("#mainStoneType_"+idx).val('');
+				$("#subStoneType_"+idx).val('');
+				$("#size_"+idx).val('');
+				$("#stockDesc_"+idx).val('');
+				$("#quantity_"+idx).val('1');
+				$("#perWeightGram_"+idx).val('');
+				$("#perWeightGold_"+idx).val('');
+				$("#perPriceBasic_"+idx).val('');
+				$("#perPriceAdd_"+idx).val('');
+				$("#perPriceMain_"+idx).val('');
+				$("#perPriceSub_"+idx).val('');
+				$("#perPriceGoldReal_"+idx).val('');
+				$("#perPriceGoldStdd_"+idx).val('');
+				$("#multipleCnt_"+idx).val('');
+				$("#consumerPrice_"+idx).val('');
+			}
+
+			function fncCustomerListPop(){
+				var url = "/customer/popup/list";
+	      var name = "customerListPopup";
+	      var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+	      window.open(url, name, option);
+			}
+
+			function fncCatalogListPop(idx){
+				var url = "/catalog/popup/list?reqtype=all&openeridx="+idx;
+	      var name = "catalogListPopup";
+	      var option = "width = 1150, height = 800, top = 100, left = 200, location = no";
+	      window.open(url, name, option);
+			}
+
+			function fncVenderListPop(idx){
+				var url = "/vender/popup/list?openeridx="+idx;
+	      var name = "venderListPopup";
+	      var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+	      window.open(url, name, option);
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">코드수정</h6>
+    </div>
+    <form id="form" class="form-horizontal">
+      <div class="form-group row border-top">
+        <div class="col-sm-3 text-right mt20">코드ID</div>
+        <div class="col-sm-8 mt10">
+          <input type="text" id="cdId" class="form-control" oninput="fncChangeUpperCase(this);" readonly="readonly"/>
+        </div>
+      </div>
+      <div class="form-group row border-top">
+        <div class="col-sm-3 text-right mt20">코드명</div>
+        <div class="col-sm-8 mt10">
+          <input type="text" id="cdNm" class="form-control" maxlength="20"/>
+        </div>
+      </div>
+
+      <div class="form-group row border-top border-bottom">
+        <div class="col-sm-3 text-right mt10">사용여부</div>
+        <div class="col-sm-8 mt10">
+          <input type="radio" name="useYn" id="use_y" value="Y"/><label for="use_y">&nbsp;사용</label>&nbsp;
+          <input type="radio" name="useYn" id="use_n" value="N"/><label for="use_n">&nbsp;미사용</label>
+        </div>
+      </div>
+
+      <div class="btn_wrap text-center mb-3">
+        <a href="javascript:void(0);" onclick="modify(); return false;" class="btn btn-primary waves-effect waves-light"><span class="text">저장</span></a>
+        <span id="remove-auth"></span>
+        <a href="javascript:void(0);" onclick="goList();" class="btn btn-secondary btn-icon-split"><span class="text">목록</span></a>
+      </div>
+    </form>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			window.onload = () => {
+				find();
+	  	}
+
+			function find() {
+
+        if(!isValidToken())
+			    return false;
+
+				const cdid = /*[[${cdid}]]*/;
+				if ( !cdid ) {
+		    	return false;
+		    }
+
+				fetch(`/api/code/`+cdid, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': getToken()
+					}
+        }).then(response => {
+		    	if (!response.ok) {
+						throw new Error('Request failed...');
+			    }
+		    	return response.json();
+		   	}).then(json => {
+          if(checkNullVal(json.menuAuthResponseDto.modifyAuth) != 'Y'){
+            altNoAuth();
+            goList();
+            return false;
+          }
+          if(checkNullVal(json.menuAuthResponseDto.removeAuth) == 'Y'){
+            let removeAuthBtn = `
+              <a href="javascript:void(0);" onclick="remove(); return false;" class="btn btn-danger waves-effect waves-light"><span class="text">삭제</span></a>
+            `;
+            document.getElementById('remove-auth').innerHTML = removeAuthBtn;
+          }
+		   		const form = document.getElementById('form');
+		   		form.cdId.value = checkNullVal(json.cdId);
+		   		form.cdNm.value = checkNullVal(json.cdNm);
+		   		checkNullVal(json.useYn) == 'N' ? form.use_n.checked = true : form.use_n.checked = false;
+		   		checkNullVal(json.useYn) == 'Y' ? form.use_y.checked = true : form.use_y.checked = false;
+
+		   	}).catch(error => {
+		    	alert('코드 정보를 찾을 수 없습니다.');
+		    	goList();
+		   	});
+			}
+
+			function modify(){
+        if(!isValidToken())
+			    return false;
+
+        const cdid = /*[[${cdid}]]*/;
+				if ( !cdid ) {
+		    	return false;
+		    }
+
+				const form = document.getElementById('form');
+				const params = {
+					cdNm : form.cdNm.value,
+					useYn : form.useYn.value,
+				};
+
+				fetch(`/api/code/`+cdid, {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': getToken()
+					},
+					body: JSON.stringify(params)
+				}).then(response => {
+					if(!response.ok){
+						if(response.status == '403'){
+              altNoAuth();
+              goList();
+              return false;
+            }
+            else {
+              throw new Error('Request Failed...');
+            }
+					}
+
+					alert('수정되었습니다.');
+					goList();
+				}).catch(error => {
+					alert('오류가 발생하였습니다.');
+				});
+			}
+
+			function fncChangeUpperCase(obj){
+				if($(obj).val() != ''){
+					const regex = /^[a-z|A-Z]+$/;
+					if(!regex.test($(obj).val())){
+						alert('영문만 입력해주세요.');
+						$(obj).val('');
+					}
+					else {
+						$(obj).val($(obj).val().toUpperCase());
+					}
+				}
+			}
+
+			//코드 삭제
+			function remove() {
+        if(!isValidToken())
+			    return false;
+
+			  const cdid = /*[[${cdid}]]*/;
+				if ( !cdid ) {
+		    	return false;
+		    }
+
+      	if ( !confirm(`코드를 삭제하시겠습니까?`) ) {
+      		return false;
+      	}
+
+      	fetch(`/api/code/`+cdid, {
+					method: 'DELETE',
+        	headers: {
+						'Content-Type': 'application/json',
+						'Authorization': getToken()
+          }
+      	}).then(response => {
+      		if (!response.ok) {
+         		if(response.status == '403'){
+              altNoAuth();
+              goList();
+              return false;
+            }
+            else {
+              throw new Error('Request Failed...');
+            }
+        	}
+
+        	alert('삭제되었습니다.');
+        	goList();
+
+      	}).catch(error => {
+      		alert('오류가 발생하였습니다.');
+      	});
+	  	}
+
+			function goList(){
+			  const cdid = /*[[${cdid}]]*/;
+				if ( !cdid ) {
+		    	return false;
+		    }
+
+			  const subcdid = cdid.substring(0,2);
+			  const cddepth = /*[[${cddepth}]]*/;
+				location.href = '/code/popup/list/'+subcdid+'/'+cddepth;
+			}
+		/*]]>*/
+  </script>
+</th:block>
+</html>

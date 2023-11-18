@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+    <div class="card shadow mt-4 mb-4">
+        <div class="card-header py-3 text-center">
+            <h6 class="m-0 font-weight-bold text-primary">카다로그 등록</h6>
+        </div>
+        <div class="card-body">
+            <form id="form" class="form-horizontal">
+                <div class="row text-center border-bottom">
+                    <div class="col bg-light" style="line-height:40px;">제품 사진</div>
+                </div>
+                <div class="row text-center">
+                    <div class="col bg-light">
+                        <label for="file" id="file-label" class="custom-file custom-file-label mt5">파일 첨부하기</label>
+                        <input type="file" name="file" id="file" class="custom-file-input" style="display:none;"/>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col"><img id="preview" width="640px" height="480px" class="m10"/></div>
+                </div>
+                <div class="row text-center border-bottom">
+                    <div class="col bg-light" style="line-height:40px;">모델 정보</div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center">
+                    <div class="col bg-light border-righ t">제조사<span class="important"> *</span></div>
+                    <div class="col bg-light border-right">모델번호<span class="important"> *</span></div>
+                    <div class="col bg-light">품명</div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center">
+                    <div class="col border-right">
+                        <div class="input-group-append">
+                            <input type="hidden" name="venderNo" id="venderNo" class="form-data"/>
+                            <input type="text" id="venderNm" class="form-control mtb5" readonly="readonly"/>
+                            <i class="fas fa-search fa-sm ml5 mt15" onclick="fncVenderListPop(); return false;"></i>
+                        </div>
+                    </div>
+                    <div class="col border-right">
+                        <input type="text" name="modelId" id="modelId" class="form-control form-data mtb5"/>
+                    </div>
+                    <div class="col">
+                        <input type="text" name="modelNm" id="modelNm" class="form-control form-data mtb5"/>
+                    </div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center">
+                    <div class="col bg-light border-right">표준재질</div>
+                    <div class="col bg-light border-right">표준중량(g)</div>
+                    <div class="col bg-light">표준색상</div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center">
+                    <div class="col border-right">
+                        <select name="stddMaterialCd" id="stddMaterialCd" class="form-control form-data mtb5">
+                            <option value="">선택</option>
+                            <option th:each="cditem : ${smlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                        </select>
+                    </div>
+                    <div class="col border-right">
+                        <input type="text" name="stddWeight" id="stddWeight" class="form-control form-data mtb5" maxlength="10"/>
+                    </div>
+                    <div class="col">
+                        <select name="stddColorCd" id="stddColorCd" class="form-control form-data mtb5">
+                            <option value="">선택</option>
+                            <option th:each="cditem : ${sclist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row row-cols-3 border-bottom text-center">
+                    <div class="col bg-light border-right">표준사이즈</div>
+                    <div class="col bg-light border-right">주문시 유의사항</div>
+                    <div class="col bg-light">등록일</div>
+                </div>
+                <div class="row row-cols-3 border-bottom text-center">
+                    <div class="col border-right">
+                        <input type="text" name="stddSize" id="stddSize" class="form-control form-data mtb5" maxlength="20"/>
+                    </div>
+                    <div class="col border-right">
+                        <input type="text" name="odrNotice" id="odrNotice" class="form-control form-data mtb5" maxlength="500"/>
+                    </div>
+                    <div class="col">
+                        <input type="date" name="regDt" id="regDt" class="form-control form-data mtb5" maxlength="10"/>
+                    </div>
+                </div>
+
+                <div class="row text-center border-bottom">
+                    <div class="col bg-light" style="line-height:40px;">구매단가</div>
+                </div>
+                <div class="row row-cols-4 border-bottom text-center">
+                    <div class="col bg-light border-right">기본공임</div>
+                    <div class="col bg-light border-right">메인가격</div>
+                    <div class="col bg-light border-right">보조가격</div>
+                    <div class="col bg-light">합계</div>
+                </div>
+                <div class="row row-cols-4 border-bottom text-center">
+                    <div class="col border-right">
+                        <input type="number" name="basicIdst" id="basicIdst" class="form-control form-data mtb5"/>
+                    </div>
+                    <div class="col border-right">
+                        <input type="number" name="mainPrice" id="mainPrice" class="form-control form-data mtb5"/>
+                    </div>
+                    <div class="col border-right">
+                        <input type="number" name="subPrice" id="subPrice" class="form-control form-data mtb5"/>
+                    </div>
+                    <div class="col border-right">
+                        <input type="text" name="totalPrice" id="totalPrice" class="form-control form-data mtb5" readonly="readonly"/>
+                    </div>
+                </div>
+                <div class="table-responsive clearfix mt-3">
+                    <table class="table">
+                        <colgroup>
+                            <col width="8%"/>
+                            <col width="13%"/>
+                            <col width="18%"/>
+                            <col width="10%"/>
+                            <col width="13%"/>
+                            <col width="13%"/>
+                            <col />
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th colspan="7">스톤정보</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center border-right">No</th>
+                            <th class="text-center border-right">구분</th>
+                            <th class="text-center border-right">스톤명</th>
+                            <th class="text-center border-right">알수</th>
+                            <th class="text-center border-right">구매단가</th>
+                            <th class="text-center border-right">합계</th>
+                            <th class="text-center">스톤설명</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <th:block th:each="idx : ${#numbers.sequence(1,10)}">
+                            <tr>
+                                <td class="text-center border-right" th:text="${idx}"></td>
+                                <td class="text-center border-right">
+                                    <select name="stoneTypeCdArr" th:id="'stoneTypeCd_'+${idx}" class="form-control mtb5">
+                                        <option value="">선택</option>
+                                        <option th:each="cditem : ${ttlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                                    </select>
+                                </td>
+                                <td class="text-center border-right">
+                                    <input type="text" name="stoneNmArr" th:id="'stoneNm_'+${idx}" class="form-control mtb5" maxlength="50"/>
+                                </td>
+                                <td class="text-center border-right">
+                                    <input type="number" name="beadCntArr" th:id="'beadCnt_'+${idx}" class="form-control mtb5 beadcnt" min="0"/>
+                                </td>
+                                <td class="text-center border-right">
+                                    <input type="number" name="purchasePriceArr" th:id="'purchasePrice_'+${idx}" class="form-control mtb5 purchaseprice" min="0"/>
+                                </td>
+                                <td class="text-center border-right">
+                                    <input type="text" class="form-control mtb5 totalpurchaseprice" readonly="readonly"/>
+                                </td>
+                                <td class="text-center">
+                                    <input type="text" name="stoneDescArr" th:id="'stonDesc_'+${idx}" class="form-control mtb5" maxlength="500"/>
+                                </td>
+                            </tr>
+                        </th:block>
+                        <tr>
+                            <td colspan="3" class="text-right border-right border-bottom">소계</td>
+                            <td id="total_bead_cnt_txt" class="bg-yellow text-center border-right border-bottom"></td>
+                            <td class="border-right border-bottom"></td>
+                            <td id="total_price_txt" class="bg-yellow text-center border-right border-bottom"></td>
+                            <td class="border-bottom"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="btn_wrap text-center">
+                    <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">등록</a>
+                    <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			$(document).ready(function(){
+				const inputElement = document.getElementById("file");
+				inputElement.addEventListener("change", readURL, false);
+
+				$('#basicIdst, #mainPrice, #subPrice').on('change keyup', function() {
+					basicIdstVal = Number(checkNullValR($("#basicIdst").val(),'0'));
+					mainPriceVal = Number(checkNullValR($("#mainPrice").val(),'0'));
+					subPriceVal = Number(checkNullValR($("#subPrice").val(),'0'));
+					totalPurchasePrice = basicIdstVal + mainPriceVal + subPriceVal;
+					$("#totalPrice").val(totalPurchasePrice);
+				});
+
+				$('.beadcnt').on('change keyup', function() {
+
+					$("#total_bead_cnt").text('');
+					$("#total_price").text('');
+
+					var totalprice = 0;
+					var totalbeadcnt = 0;
+
+					$(".beadcnt").each(function(idx){
+						var breadcnt = Number($(this).val() == '' ? '0' : $(this).val());
+						var purchaseprice = Number($(".purchaseprice").eq(idx).val() == '' ? '0' : $(".purchaseprice").eq(idx).val());
+
+						var totalpurchaseprice = (breadcnt*purchaseprice) == 0 ? '' : ((breadcnt*purchaseprice)+'');
+						$(".totalpurchaseprice").eq(idx).val(totalpurchaseprice);
+
+						totalprice += Number(totalpurchaseprice);
+
+						if(breadcnt >= 0){
+							totalbeadcnt += breadcnt
+						}
+					});
+					$("#total_bead_cnt_txt").text(totalbeadcnt == 0 ? '' : (totalbeadcnt+''));
+					$("#total_price_txt").text(totalprice == 0 ? '' : (totalprice+''));
+        });
+
+				$('.purchaseprice').on('change keyup', function() {
+
+					$("#total_price").text('');
+
+					var totalprice = 0;
+
+					$(".purchaseprice").each(function(idx){
+						var breadcnt = Number($(".beadcnt").eq(idx).val() == '' ? '0' : $(".beadcnt").eq(idx).val());
+						var purchaseprice = Number($(this).val() == '' ? '0' : $(this).val());
+
+						var totalpurchaseprice = (breadcnt*purchaseprice) == 0 ? '' : ((breadcnt*purchaseprice)+'');
+						$(".totalpurchaseprice").eq(idx).val(totalpurchaseprice);
+
+						totalprice += Number(totalpurchaseprice);
+
+					});
+					$("#total_price_txt").text(totalprice == 0 ? '' : (totalprice+''));
+        });
+
+        //checkAuth();
+			});
+
+			function readURL() {
+			  if (this.files && this.files[0]) {
+			    var reader = new FileReader();
+			    reader.onload = function(e) {
+			      document.getElementById('preview').src = e.target.result;
+			    };
+			    reader.readAsDataURL(this.files[0]);
+			    document.getElementById('file-label').innerHTML = this.files[0].name;
+			  } else {
+			    document.getElementById('preview').src = "";
+			    document.getElementById('file-label').innerHTML = '파일 첨부하기';
+			  }
+			}
+
+      /*
+      function checkAuth() {
+        if(!isValidToken())
+          return false;
+
+        const params = {
+					'menuId': 'catalog'
+				};
+
+        fetch(`/api/menuauth/user/auth`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': getToken()
+					},
+					body: JSON.stringify(params)
+				}).then(response => {
+          if (!response.ok) {
+            throw new Error('Request failed...');
+          }
+          return response.json();
+        }).then(json => {
+          if(checkNullValR(json.writeAuth, 'N') != 'Y'){
+            altNoAuth();
+            fncParentRefresh();
+            fncClose();
+          }
+        }).catch(error => {
+          alert('오류가 발생하였습니다.');
+          fncClose();
+        });
+			}
+      */
+
+			function fncSave(){
+			  if(!isValidToken())
+          return false;
+
+				if($("#modelId").val() == ''){
+					alert('모델번호를 입력해주세요.');
+					$("#modelId").focus();
+					return false;
+				}
+
+				const formData = new FormData();
+				const fileField = document.querySelector('input[type="file"]');
+				$(".form-data").each(function(){
+					formData.append($(this).attr("name"), checkNullVal($(this).val()));
+				});
+				$("select[name=stoneTypeCdArr]").each(function(){
+					formData.append("stoneTypeCdArr[]", checkNullVal($(this).val()));
+				});
+				$("input[name=stoneNmArr]").each(function(){
+					formData.append("stoneNmArr[]", checkNullVal($(this).val()));
+				});
+				$("input[name=beadCntArr]").each(function(){
+					formData.append("beadCntArr[]", checkNullVal($(this).val()));
+				});
+				$("input[name=purchasePriceArr]").each(function(){
+					formData.append("purchasePriceArr[]", checkNullVal($(this).val()));
+				});
+				$("input[name=stoneDescArr]").each(function(){
+					formData.append("stoneDescArr[]", checkNullVal($(this).val()));
+				});
+				//배열 데이터 넣기
+				formData.append("file", fileField.files[0]);
+
+        fetch('/api/catalog/write', {
+          method: 'POST',
+          headers: {
+            'Authorization': getToken()
+          },
+          body: formData
+        }).then(response => {
+          if(!response.ok){
+            if(response.status == '403'){
+              altNoAuth();
+              fncParentRefresh();
+              fncClose();
+              return false;
+            }
+            else {
+              throw new Error('Request Failed...');
+            }
+          }
+          else {
+            alert('저장되었습니다.');
+            fncParentRefresh();
+            fncClose();
+          }
+        }).catch(error => {
+          alert('오류가 발생하였습니다.');
+        });
+			}
+
+			function fncVenderListPop(){
+        var url = "/vender/popup/list?openeridx=-1";
+        var name = "venderListPopup";
+        var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+			}
+    /*]]>*/
+  </script>
+</th:block>
+</html>

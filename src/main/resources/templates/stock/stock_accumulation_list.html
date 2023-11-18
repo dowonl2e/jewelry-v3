@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <form id="searchForm" onsubmit="return false;">
+        <div class="mb20" id="adv-search">
+          <div class="form-inline">
+            <select id="searchStore" class="form-control">
+              <option value="">매장구분</option>
+              <option th:each="cditem : ${stlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+            </select>
+            <select id="searchStockType" class="form-control ml5">
+              <option value="">현재고구분</option>
+              <option th:each="cditem : ${oclist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+            </select>
+            <select id="searchMaterial" class="form-control ml5">
+              <option value="">재질구분</option>
+              <option th:each="cditem : ${smlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+            </select>
+          </div>
+          <div class="form-inline mt5">
+            <span class="mlr5">등록일</span>
+            <input type="date" id="searchStdt" class="form-control mlr5"/> ~
+            <input type="date" id="searchEddt" class="form-control mlr5"/>
+            <input type="number" id="recordCount" class="form-control mlr5" placeholder="행 개수" min="1" max="100" oninput="fncCheckZero(this);" style="width:100px;"/>
+            <input type="text" id="searchWord" class="form-control mlr5" placeholder="고객명/모델번호 입력" style="width: auto;" />
+            <button type="button" onclick="findAll(0);" class="btn btn-secondary">
+              <span aria-hidden="true" class="glyphicon glyphicon-search">검색</span>
+            </button>
+            <a href="javascript: void(0);" onclick="fncRefresh(); return false;" class="btn btn-warning waves-effect waves-light ml5">새로고침</a>
+            <span id="write-auth1"></span>
+          </div>
+        </div>
+      </form>
+      <div class="table-responsive clearfix">
+        <table class="table">
+          <thead>
+          <tr>
+            <th rowspan="2" class="text-center">No</th>
+            <th rowspan="2" class="text-center border-left"><a href="javascript:void(0);" class="btn btn-success btn-circle btn-sm"><i class="fas fa-check"></i></a></th>
+            <th rowspan="2" class="text-center border-left">매장</th>
+            <th rowspan="2" class="text-center border-left">등록일<br/>변경일</th>
+            <th rowspan="2" class="text-center border-left">시리얼</th>
+            <th rowspan="2" class="text-center border-left">재고<br/>구분</th>
+            <th rowspan="2" class="text-center border-left">사이즈<br/>비&nbsp;&nbsp;&nbsp;고</th>
+            <th rowspan="2" class="text-center border-left">모델<br/>번호</th>
+            <th rowspan="2" class="text-center border-left">재질</th>
+            <th rowspan="2" class="text-center border-left">색상</th>
+            <th rowspan="2" class="text-center border-left">메인</th>
+            <th rowspan="2" class="text-center border-left">보조</th>
+            <th rowspan="2" class="text-center border-left">수량</th>
+            <th rowspan="2" class="text-center border-left">중량</th>
+            <th colspan="3" class="text-center border-left">개당 구매가</th>
+            <th rowspan="2" class="text-center border-left">배수</th>
+            <th rowspan="2" class="text-center border-left">개당<br/>TAG가</th>
+          </tr>
+          <tr>
+            <th class="text-center border-left">공임</th>
+            <th class="text-center border-left">실질</th>
+            <th class="text-center border-left">기준</th>
+          </tr>
+          </thead>
+          <tbody id="list"></tbody>
+        </table>
+
+        <div class="text-left mt-3">
+          <a href="javascript: void(0);" class="btn btn-success btn-circle btn-sm"><i class="fas fa-check"></i></a><span class="ml5">체크된 것</span>
+          <span id="remove-auth1"></span>
+        </div>
+
+        <nav aria-label="Page navigation" class="text-center">
+          <ul class="pagination"></ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+
+      var minNumberLen = 1;
+      var maxNumberLen = 100;
+
+      /**
+       * 페이지 HTML 렌더링
+       */
+      var codemap = {
+        [# th:each="code, loop : ${cdmapper}"]
+          "[(${code.cdId})]": "[(${code.cdNm})]",
+        [/]
+      };
+
+      window.onload = () => {
+        setQueryStringParams();
+        findAll();
+        addEnterSearchEvent();
+      }
+
+      /**
+        * 키워드 - 엔터 검색 이벤트 바인딩
+        */
+      function addEnterSearchEvent() {
+        document.getElementById('searchWord').addEventListener('keyup', (e) => {
+          if (e.keyCode === 13) {
+            findAll(0);
+          }
+        });
+      }
+
+      function drawPages(params) {
+
+        if (!params) {
+          document.querySelector('.pagination').innerHTML = '';
+          return false;
+        }
+
+        let html = '';
+        const pagination = params;
+
+        let startPage = pagination.startPage;
+        let endPage = pagination.endPage;
+        let nextStartPage = pagination.endPage+1 >= pagination.totalPage ? pagination.totalPage : pagination.endPage+1;
+
+        // 첫 페이지, 이전 페이지
+        if (pagination.hasPrev) {
+          html += `
+            <li><a href="javascript:void(0)" onclick="findAll(0);" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+            <li><a href="javascript:void(0)" onclick="findAll(`+(startPage)+`);" aria-label="Previous"><span aria-hidden="true">&lsaquo;</span></a></li>
+          `;
+        }
+
+        // 페이지 번호
+        for (let i = startPage ; i < endPage ; i++) {
+          const active = ((i) === (pagination.currentPage-1)) ? 'class="active"' : '';
+          html += '<li '+active+'><a href="javascript:void(0)" onclick="findAll(\''+(i+1)+'\')">'+(i+1)+'</a></li>';
+        }
+
+        // 다음 페이지, 마지막 페이지
+        if (pagination.hasNext) {
+          html += `
+            <li><a href="javascript:void(0)" onclick="findAll(`+(nextStartPage)+`);" aria-label="Next"><span aria-hidden="true">&rsaquo;</span></a></li>
+            <li><a href="javascript:void(0)" onclick="findAll(`+(pagination.totalPage)+`);" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+          `;
+        }
+
+        document.querySelector('.pagination').innerHTML = html;
+      }
+
+      /**
+       * 게시글 리스트 조회
+       */
+      function findAll(page) {
+
+        const pageParams = Number(new URLSearchParams(location.search).get('page'));
+        page = page ? page : (pageParams ? pageParams : 1);
+
+        const form = document.getElementById('searchForm');
+
+        var params = {
+          currentPage: page
+          , searchStore: form.searchStore.value
+          , searchStockType: form.searchStockType.value
+          , searchMaterial: form.searchMaterial.value
+          , searchStdt: form.searchStdt.value
+          , searchEddt: form.searchEddt.value
+          , recordCount: form.recordCount.value
+          , searchWord: form.searchWord.value
+        }
+        checkListNullParams(params);
+
+        const queryString = new URLSearchParams(params).toString();
+        const replaceUri = location.pathname + '?' + queryString;
+        history.replaceState({}, '', replaceUri);
+
+        getJson('/api/stock/accumulation/list', params).then(response => {
+          let accessAuth = 'N', writeAuth = 'N', viewAuth = 'N', modifyAuth = 'N', removeAuth = 'N';
+          if (!Object.keys(response).length || response.menuAuthResponseDto == null) {
+            altNoAuth();
+            goMainPage();
+            return false;
+          }
+          else {
+            accessAuth = checkNullValR(response.menuAuthResponseDto.accessAuth, 'N');
+            if(accessAuth != 'Y'){
+              altNoAuth();
+              goMainPage();
+              return false;
+            }
+            writeAuth = checkNullValR(response.menuAuthResponseDto.writeAuth, 'N');
+            viewAuth = checkNullValR(response.menuAuthResponseDto.viewAuth, 'N');
+            removeAuth = checkNullValR(response.menuAuthResponseDto.removeAuth, 'N');
+
+            //등록 권한 관련 버튼 체크
+            if(writeAuth == 'Y'){
+              let writeAuthBtn = `
+                <a href="javascript: void(0);" onclick="fncPopupStockWrite();" class="btn btn-primary waves-effect waves-light ml5">재고등록</a>
+              `;
+              document.getElementById('write-auth1').innerHTML = writeAuthBtn;
+            }
+            else {
+              removeAuthButton('write-auth1');
+            }
+
+            //삭제 권한 관련 버튼 체크
+            if(removeAuth == 'Y'){
+              let removeAuthBtn = `
+                <a href="javascript: void(0);" onclick="fncRemove(); return false;" id="remove-btn" class="btn btn-danger btn-icon-split btn-sm mlr5"><span class="text">삭제</span></a>
+              `;
+              document.getElementById('remove-auth1').innerHTML = removeAuthBtn;
+            }
+            else {
+              removeAuthButton('remove-auth1');
+            }
+          }
+
+          if (!Object.keys(response).length || response.list == null || response.list.length == 0) {
+            document.getElementById('list').innerHTML = '<td colspan="19" class="text-center">재고내역이 없습니다.</td>';
+            drawPages();
+            return false;
+          }
+
+          let html = '';
+          let num = response.params.totalCount - (response.params.currentPage-1) * response.params.recordCount;
+          response.list.forEach((obj, idx) => {
+            if (!Object.keys(response).length || response.list == null || response.list.length == 0) {
+              document.getElementById('list').innerHTML = '<td colspan="19" class="text-center">재고내역이 없습니다.</td>';
+              drawPages();
+              return false;
+            }
+
+            delYn = checkNullVal(obj.delYn);
+            saleYn = checkNullVal(obj.saleYn);
+            stockTypeCd = checkNullVal(obj.stockTypeCd);
+            backgroundTr = '';
+            if(delYn == 'Y') {
+              backgroundTr = 'bg-orange';
+            }
+            else if(stockTypeCd == 'OC03'){
+                if(saleYn == 'Y') backgroundTr = 'bg-green';
+                else backgroundTr = 'bg-springgreen';
+            }
+
+            html += `
+              <tr class="`+backgroundTr+` small">
+                <td class="text-center">
+            `;
+            if(viewAuth == 'Y'){
+              html += `		<a href="javascript: void(0);" onclick="fncPopupView('`+checkNullVal(obj.stockNo)+`'); return false;">` + (num--) + `</a>`;
+            }
+            else {
+              html += (num--);
+            }
+            html += `
+                </td>
+                <td class="text-center"><input type="checkbox" name="stockNoArr" class="form-check" value="`+checkNullVal(obj.stockNo)+`"/></td>
+                <td class="text-center">`+ checkNullVal(codemap[obj.storeCd]) + `</td>
+                <td class="text-center"><div class="">` + checkSubstringNullVal(obj.regDt,2,10) + `</div><div>`+checkSubstringNullVal(obj.updtDt,2,10)+`</div></td>
+                <td class="text-center bold">`+checkNullVal(obj.stockNo)+`</td>
+            `;
+            stockType = '';
+            if(delYn == 'Y')
+              stockType = '<div>삭제</div>';
+            else if(saleYn == 'Y')
+              stockType = '<div>판매</div>';
+
+            if(checkNullVal(codemap[obj.stockTypeCd]) != '')
+              stockType += '<div>'+checkNullVal(codemap[obj.stockTypeCd])+'</div>';
+
+            html += `
+                <td class="text-center">`+ stockType + `</td>
+                <td class="text-center"><div class="">` + checkNullVal(obj.size)+`</div><div>`+checkNullVal(obj.stockDesc)+`</div></td>
+                <td class="text-center">` + checkNullVal(obj.modelId)+`</td>
+                <td class="text-center important">` + checkNullVal(codemap[obj.materialCd])+`</td>
+                <td class="text-center">` + checkNullVal(codemap[obj.colorCd]) + `</td>
+                <td class="text-center">` + checkNullVal(obj.mainStoneType) + `</td>
+                <td class="text-center">` + checkNullVal(obj.subStoneType) + `</td>
+                <td class="text-center">` + checkNullVal(obj.quantity) + `</td>
+                <td class="text-center">` + checkNullVal(obj.perWeightGram) + `</td>
+            `;
+            //개당구매가 공임
+            perPrice = Number(checkNullValR(obj.perPriceBasic,'0'));
+            perPrice += Number(checkNullValR(obj.perPriceAdd,'0'));
+            perPrice += Number(checkNullValR(obj.perPriceMain,'0'));
+            perPrice += Number(checkNullValR(obj.perPriceSub,'0'));
+            perPriceTxt = (perPrice == 0 || perPrice == 0.0 ? '' : priceWithComma(perPrice));
+            html += `
+                <td class="text-center">`+perPriceTxt+`</td>
+            `;
+
+            //재질별 중량 체크
+            weight = 0;
+            materialCd = checkNullVal(obj.materialCd);
+            if(materialCd == 'SM01') weight = 0.6435;
+            else if(materialCd == 'SM02') weight = 0.825;
+            else if(materialCd == 'SM03') weight = 1;
+
+            //개당구매가 실질
+            realPchGoldPrice = Number(checkNullValR(obj.realPchGoldPrice,'0'));
+            realPchGoldPrice = realPchGoldPrice*(Number(checkNullValR(obj.perWeightGram,'0'))*weight)+perPrice;
+            realPchGoldPriceTxt = (realPchGoldPrice == 0 || realPchGoldPrice == 0.0 ? '' : priceWithComma(realPchGoldPrice));
+            html += `
+                <td class="text-center">`+realPchGoldPriceTxt+`</td>
+            `;
+            //개당구매가 기준
+            html += `
+                <td class="text-center">`+perPriceTxt+`</td>
+                <td class="text-center">`+checkNullVal(obj.multipleCnt)+`</td>
+            `;
+            //소비자 TAG가
+            consumerPrice = Number(checkNullValR(obj.multipleCnt,'0'))*perPrice;
+            consumerPriceTxt = (consumerPrice == 0 || consumerPrice == 0.0 ? '' : priceWithComma(consumerPrice));
+            html += `
+                <td class="text-center">`+consumerPriceTxt+`</td>
+              </tr>
+            `;
+          });
+
+          document.getElementById('list').innerHTML = html;
+          drawPages(response.params);
+        });
+      }
+
+      /**
+       * 작성하기
+       */
+      function fncPopupStockWrite() {
+        var url = "/stock/popup/write";
+        var name = "stockWritePopup";
+        var option = "width = 1500, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+      }
+
+      /**
+       * 수정하기
+       */
+      function fncPopupView(stockno) {
+        var url = "/stock/popup/"+stockno;
+        var name = "stockViewPopup";
+        var option = "width = 1500, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+      }
+
+      function fncRemove(){
+        if(!isValidToken())
+          return false;
+
+        var orderscheckcnt = 0;
+        $(".form-check").each(function(){
+          if($(this).is(":checked")){
+            orderscheckcnt++;
+          }
+        });
+        if(orderscheckcnt == 0){
+          alert('삭제할 주문이력을 선택해주세요.');
+          return false;
+        }
+        if(confirm('삭제하시겠습니까?')){
+          const formData = new FormData();
+          formData.append("menuId", 'stock/accumulation');
+          $(".form-check").each(function(){
+            if($(this).is(":checked"))
+              formData.append("stockNoArr[]", checkNullVal($(this).val()));
+          });
+
+          fetch('/api/stock/stocks/remove', {
+            method: 'PATCH',
+            headers: {
+              'Authorization': getToken()
+            },
+            body: formData
+          }).then(response => {
+            if(!response.ok){
+              if(response.status == '403'){
+                altNoAuth();
+                refresh();
+                return false;
+              }
+              else {
+                throw new Error('Request Failed...');
+              }
+            }
+            alert('삭제되었습니다.');
+            refresh();
+          }).catch(error => {
+            alert('오류가 발생하였습니다.');
+          });
+        }
+      }
+
+      function refresh(){
+        findAll(/*[[${param.currentPage}]]*/);
+      }
+
+    /*]]>*/
+	</script>
+</th:block>
+</html>

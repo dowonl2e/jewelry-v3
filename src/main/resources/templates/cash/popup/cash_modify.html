@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+    <div class="card shadow mt-4 mb-4">
+        <div class="card-header py-3 text-center">
+            <h6 class="m-0 font-weight-bold text-primary">금/현금 수정</h6>
+        </div>
+        <div class="card-body">
+            <form id="form" class="form-horizontal">
+                <div class="table-responsive clearfix">
+                    <table class="table">
+                        <colgroup>
+                            <col width="20%"/>
+                            <col width="20%"/>
+                            <col width="20%"/>
+                            <col width="20%"/>
+                            <col width="20%"/>
+                        </colgroup>
+                        <tbody>
+                        <tr>
+                            <td rowspan="2" class="bg-light border-right text-center">관리매장<span class="important"> *</span></td>
+                            <td rowspan="2" class="bg-light border-right text-center">등록일<span class="important"> *</span></td>
+                            <td colspan="3" class="bg-light text-center">합 계</td>
+                        </tr>
+                        <tr>
+                            <td class="bg-light border-right text-center">입고</td>
+                            <td class="bg-light border-right text-center">출고</td>
+                            <td class="bg-light text-center">입고-출고</td>
+                        </tr>
+                        <tr class="border-bottom">
+                            <td class="text-center border-right mtb5">
+                                <select name="storeCd" id="storeCd" class="form-control form-data">
+                                    <option th:each="cditem : ${stlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                                </select>
+                            </td>
+                            <td class="text-center border-right">
+                                <input type="date" name="regDt" id="regDt" class="form-control form-data mtb5" value="${today}" maxlength="10"/>
+                            </td>
+                            <td class="text-center border-right">
+                                <input type="text" id="receivedPrice" class="form-control mtb5" readonly="readonly"/>
+                            </td>
+                            <td class="text-center border-right">
+                                <input type="text" id="shipoutPrice" class="form-control mtb5" readonly="readonly"/>
+                            </td>
+                            <td class="text-center">
+                                <input type="text" id="receShipTotalPrice" class="form-control mtb5" readonly="readonly"/>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-responsive clearfix mt-3">
+                    <table class="table" style="min-width:150%; overflow-x:scroll;">
+                        <colgroup>
+                            <col width="3%"/>
+                            <col width="4%"/>
+                            <col width="7%"/>
+                            <col width="9%"/>
+                            <col width="10%"/>
+                            <col width="10%"/>
+                            <col width="10%"/>
+                            <col width="9%"/>
+                            <col width="6%"/>
+                            <col width="6%"/>
+                            <col width="8%"/>
+                            <col width="8%"/>
+                            <col />
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th class="text-center border-right">No</th>
+                            <th class="text-center border-right">취소</th>
+                            <th class="text-center border-right">구분</th>
+                            <th class="text-center border-right">계정</th>
+                            <th class="text-center border-right">통장구분</th>
+                            <th class="text-center border-right">거래처</th>
+                            <th class="text-center border-right">내역</th>
+                            <th class="text-center border-right">재질</th>
+                            <th class="text-center border-right">중량(g)</th>
+                            <th class="text-center border-right">수량</th>
+                            <th class="text-center border-right">단가</th>
+                            <th class="text-center border-right">공급가</th>
+                            <th class="text-center">합계금액</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <th:block th:each="idx : ${#numbers.sequence(0,4)}">
+                                <tr>
+                                    <td class="text-center border-right" th:text="${idx+1}"></td>
+                                    <td class="text-center border-right">
+                                        <a href="#" th:onclick="fncValueInit([[${idx}]]); return false;" class="btn btn-danger btn-circle btn-sm"><i class="fas fa-trash"></i></a>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <select name="cashTypeCdArr" th:id="'cashTypeCd_'+${idx}" class="form-control form-multi cashtypecd mtb5" th:onchange="fncChangeRS(this.value, [[${idx}]]);">
+                                            <option value="">선택</option>
+                                            <option th:each="cditem : ${rslist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                                        </select>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <select name="cashTypeCd2Arr" th:id="'cashTypeCd2_'+${idx}" class="form-control form-multi mtb5">
+                                            <option value="">선택</option>
+                                        </select>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <select name="bankbookCdArr" th:id="'bankbookCd_'+${idx}" class="form-control form-multi mtb5">
+                                            <option value="">선택</option>
+                                            <option th:each="cditem : ${btlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                                        </select>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <input type="text" name="venderNmArr" th:id="'venderNm_'+${idx}" class="form-control form-multi mtb5" maxlength="20"/>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <input type="text" name="historyDescArr" th:id="'historyDesc_'+${idx}" class="form-control form-multi mtb5" maxlength="200"/>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <select name="materialCdArr" th:id="'materialCd_'+${idx}" class="form-control form-multi mtb5">
+                                            <option value="">선택</option>
+                                            <option th:each="cditem : ${smlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+                                        </select>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <input type="number" name="weightGramArr" th:id="'weightGram_'+${idx}" class="form-control form-multi mtb5" min="0"/>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <input type="number" name="quantityArr" th:id="'quantity_'+${idx}" class="form-control form-multi mtb5" value="1" min="1"/>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <input type="number" name="unitPriceArr" th:id="'unitPrice_'+${idx}" class="form-control form-multi unitprice smtb5"/>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <input type="text" th:id="'supplyPrice_'+${idx}" class="form-control supplyprice mtb5" readonly="readonly"/>
+                                    </td>
+                                    <td class="text-center border-right">
+                                        <input type="text" th:id="'totalPrice_'+${idx}" class="form-control totalprice mtb5" readonly="readonly"/>
+                                    </td>
+                                </tr>
+                            </th:block>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="btn_wrap text-center">
+                    <a href="javascript: void(0);" onclick="fncSave(); return false;" class="btn btn-primary waves-effect waves-light mlr5">수정</a>
+                    <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+		/*<![CDATA[*/
+			$(document).ready(function(){
+				find();
+				$(".unitprice, .cashtypecd").on('change keyup', function() {
+					var receivedPriceSum = 0;
+					var shipOutPriceSum = 0;
+					$(".unitprice").each(function(idx){
+						if($(this).val() == ''){
+							$(".supplyprice").eq(idx).val('');
+							$(".totalprice").eq(idx).val('');
+						}
+						else {
+							$(".supplyprice").eq(idx).val(priceWithComma($(this).val()));
+							$(".totalprice").eq(idx).val(priceWithComma($(this).val()));
+						}
+						cashTypeCd = $(".cashtypecd").eq(idx).val();
+						if(cashTypeCd == 'RS01'){
+							receivedPriceSum += Number(checkNullValR($(".unitprice").eq(idx).val(),'0'));
+						}
+						if(cashTypeCd == 'RS02'){
+							shipOutPriceSum += Number(checkNullValR($(".unitprice").eq(idx).val(),'0'));
+						}
+					});
+					$("#receivedPrice").val(receivedPriceSum == 0 ? '' : priceWithComma(receivedPriceSum+''));
+					$("#shipoutPrice").val(shipOutPriceSum == 0 ? '' : priceWithComma(shipOutPriceSum+''));
+					$("#receShipTotalPrice").val((receivedPriceSum-shipOutPriceSum) == 0 ? '' : priceWithComma(receivedPriceSum-shipOutPriceSum)+'');
+				});
+			});
+
+			function find() {
+        if(!isValidToken())
+          return false;
+
+				const cashno = /*[[${cashno}]]*/;
+				if ( !cashno ) {
+		    	return false;
+		    }
+
+				fetch(`/api/cash/`+cashno, {
+				  method: 'GET',
+				  headers: {
+				    'Authorization': getToken()
+				  }
+				}).then(response => {
+		    	if (!response.ok) {
+						throw new Error('Request failed...');
+			    }
+		    	return response.json();
+
+		   	}).then(json => {
+		   	  if(checkNullVal(json.menuAuthResponseDto.modifyAuth) != 'Y'){
+            altNoAuth();
+            fncParentRefresh();
+            fncClose();
+            return false;
+          }
+
+		   		const form = document.getElementById('form');
+		   		form.storeCd.value = checkNullVal(json.storeCd);
+		   		form.regDt.value = checkSubstringNullVal(json.regDt,0,10);
+		   		form.cashTypeCd_0.value = checkNullVal(json.cashTypeCd);
+		   		fncChangeRS(checkNullVal(json.cashTypeCd), '0');
+		   		form.cashTypeCd2_0.value = checkNullVal(json.cashTypeCd2);
+		   		form.bankbookCd_0.value = checkNullVal(json.bankbookCd);
+		   		form.venderNm_0.value = checkNullVal(json.venderNm);
+		   		form.historyDesc_0.value = checkNullVal(json.historyDesc);
+		   		form.materialCd_0.value = checkNullVal(json.materialCd);
+		   		form.weightGram_0.value = checkNullVal(json.weightGram);
+		   		form.quantity_0.value = checkNullVal(json.quantity);
+		   		form.unitPrice_0.value = checkNullVal(json.unitPrice);
+		   		form.supplyPrice_0.value = priceWithComma(json.unitPrice);
+		   		form.totalPrice_0.value = priceWithComma(json.unitPrice);
+
+		   		typePrice = checkNullValR(json.unitPrice,'0');
+					if(checkNullVal(json.cashTypeCd) == 'RS01'){
+						form.receivedPrice.value = (typePrice == '0' ? '' : priceWithComma(typePrice));
+						form.receShipTotalPrice.value = (typePrice == '0' ? '' : priceWithComma(typePrice));
+					}
+					else if(checkNullVal(json.cashTypeCd) == 'RS02'){
+						form.shipoutPrice.value = (typePrice == '0' ? '' : priceWithComma(typePrice));
+						form.receShipTotalPrice.value = (typePrice == '0' ? '' : ('-'+priceWithComma(typePrice)));
+					}
+		   	}).catch(error => {
+		    	alert('금/현금 정보를 찾을 수 없습니다.');
+		    	fncParentRefresh();
+		    	fncClose();
+		   	});
+			}
+
+			function fncSave(){
+			  if(!isValidToken())
+          return false;
+
+        const cashno = /*[[${cashno}]]*/;
+        if(!cashno)
+          return false;
+
+				if($("#storeCd").val() == ''){
+					alert('관리매장을 선택해주세요.');
+					$("#storeCd").focus();
+					return false;
+				}
+				if($("#regDt").val() == ''){
+					alert('등록일을 입력해주세요.');
+					$("#regDt").focus();
+					return false;
+				}
+
+				if($("#cashTypeCd_0").val() == ''){
+					alert('구분을 선택해주세요.');
+					$("#cashTypeCd_0").focus();
+					return false;
+				}
+
+				if($("#cashTypeCd2_0").val() == ''){
+					alert('계정을 선택해주세요.');
+					$("#cashTypeCd2_0").focus();
+					return false;
+				}
+
+				if($("#bankbookCd_0").val() == ''){
+					alert('통장구분을 선택해주세요.');
+					$("#bankbookCd_0").focus();
+					return false;
+				}
+
+				if(confirm('수정하시겠습니까?')){
+					const formData = new FormData();
+					$(".form-data").each(function(){
+						formData.append($(this).attr("name"), checkNullVal($(this).val()));
+					});
+					$(".form-multi").each(function(){
+						formData.append($(this).attr("name")+'[]', checkNullVal($(this).val()));
+					});
+
+					fetch('/api/cash/modify/'+cashno, {
+						method: 'PATCH',
+            headers: {
+              'Authorization': getToken()
+            },
+						body: formData
+					}).then(response => {
+						if(!response.ok){
+							if(response.status == '403'){
+                altNoAuth();
+                fncParentRefresh();
+                fncClose();
+                return false;
+              }
+              else {
+                throw new Error('Request Failed...');
+              }
+						}
+						alert('수정되었습니다.');
+						fncParentRefresh();
+						fncClose();
+					}).catch(error => {
+						alert('오류가 발생하였습니다.');
+					});
+				}
+			}
+
+			function fncValueInit(idx){
+				$("#cashTypeCd_"+idx).val('');
+				$("#cashTypeCd2_"+idx).val('');
+				$("#bankbookCd_"+idx).val('');
+				$("#venderNm_"+idx).val('');
+				$("#historyDesc_"+idx).val('');
+				$("#materialCd_"+idx).val('');
+				$("#weightGram_"+idx).val('');
+				$("#quantity_"+idx).val('1');
+				$("#unitPrice_"+idx).val('');
+				$("#supplyPrice_"+idx).val('');
+				$("#totalPrice_"+idx).val('');
+			}
+
+			function fncChangeRS(val, idx){
+				$("#cashTypeCd2_"+idx).children().remove();
+				var html = '<option value="">선택</option>';
+				if(val != ''){
+          let rslist2 = [[${rslist2}]];
+          rslist2.forEach(function(item){
+            if(item.cdId.substring(0,4) == val){
+              html += `<option value="`+item.cdId+`">`+item.cdNm+`</option>`;
+            }
+          });
+				}
+				$("#cashTypeCd2_"+idx).append(html);
+			}
+
+		/*]]>*/
+    </script>
+</th:block>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card-header py-3 text-left mt-4">
+    <h6 class="m-0 font-weight-bold text-primary">
+      <th:block th:if="${orderstep == 'A'}">고객 주문 현황</th:block>
+      <th:block th:if="${orderstep == 'B'}">고객 예약 현황</th:block>
+    </h6>
+  </div>
+  <!-- DataTales Example -->
+  <div class="card shadow mb-4">
+    <div class="card-body">
+      <form id="searchForm" onsubmit="return false;">
+        <div class="mb20" id="adv-search">
+          <div class="form-inline">
+            <select id="searchStore" class="form-control">
+              <option value="">매장 전체</option>
+              <option th:each="cditem : ${stlist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+            </select>
+            <select id="searchMaterial" class="form-control ml5">
+              <option value="">재질 전체</option>
+              <option th:each="cditem : ${stmist}" th:value="${cditem.cdId}" th:text="${cditem.cdNm}"></option>
+            </select>
+            <select id="searchStep" class="form-control ml5">
+              <option value="">단계 전체</option>
+              <option value="A">주문등록</option>
+              <option value="B">주문접수</option>
+            </select>
+          </div>
+          <div class="form-inline mt5">
+            <span class="mlr5">접수일</span>
+            <input type="date" id="searchStdt" class="form-control mlr5"/> ~
+            <input type="date" id="searchEddt" class="form-control mlr5"/>
+            <input type="number" id="recordCount" class="form-control mlr5" placeholder="행 개수" min="1" max="100" oninput="fncCheckZero(this);" style="width:100px;"/>
+            <input type="text" id="searchWord" class="form-control mlr5" placeholder="고객명/모델번호/제조사 입력" style="width: auto;" />
+            <button type="button" onclick="findAll(0);" class="btn btn-secondary">
+              <span aria-hidden="true" class="glyphicon glyphicon-search">검색</span>
+            </button>
+            <a href="javascript: void(0);" onclick="fncRefresh(); return false;" class="btn btn-warning waves-effect waves-light mlr5">새로고침</a>
+          </div>
+        </div>
+      </form>
+      <div class="table-responsive clearfix">
+        <table class="table">
+          <thead>
+          <tr>
+            <th class="text-center">No</th>
+            <th class="text-center border-left">접수일<br/>입고일</th>
+            <th class="text-center border-left">구  분<br/>판매일</th>
+            <th class="text-center border-left">매장명<br/>고객명</th>
+            <th class="text-center border-left">모델번호</th>
+            <th class="text-center border-left">재질<br/>색상</th>
+            <th class="text-center border-left">수량</th>
+            <th class="text-center border-left">메.스톤<br/>보.스톤</th>
+            <th class="text-center border-left">사이즈</th>
+            <th class="text-center border-left">기타 설명</th>
+            <th class="text-center border-left">제조사<br/>제조사번호</th>
+            <th class="text-center border-left">단계</th>
+          </tr>
+          </thead>
+          <tbody id="list"></tbody>
+        </table>
+
+        <nav aria-label="Page navigation" class="text-center">
+          <ul class="pagination"></ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+
+      var minNumberLen = 1;
+      var maxNumberLen = 100;
+
+      /**
+       * 페이지 HTML 렌더링
+       */
+      var codemap = {
+        [# th:each="code, loop : ${cdmapper}"]
+          "[(${code.cdId})]": "[(${code.cdNm})]",
+        [/]
+      };
+
+      window.onload = () => {
+        setQueryStringParams();
+        findAll();
+        addEnterSearchEvent();
+      }
+
+      /**
+        * 키워드 - 엔터 검색 이벤트 바인딩
+        */
+      function addEnterSearchEvent() {
+        document.getElementById('searchWord').addEventListener('keyup', (e) => {
+          if (e.keyCode === 13) {
+            findAll(0);
+          }
+        });
+      }
+
+      function drawPages(params) {
+
+        if (!params) {
+          document.querySelector('.pagination').innerHTML = '';
+          return false;
+        }
+
+        let html = '';
+        const pagination = params;
+
+        let startPage = pagination.startPage;
+        let endPage = pagination.endPage;
+        let nextStartPage = pagination.endPage+1 >= pagination.totalPage ? pagination.totalPage : pagination.endPage+1;
+
+        // 첫 페이지, 이전 페이지
+        if (pagination.hasPrev) {
+          html += `
+            <li><a href="javascript:void(0)" onclick="findAll(0);" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>
+            <li><a href="javascript:void(0)" onclick="findAll(`+(startPage)+`);" aria-label="Previous"><span aria-hidden="true">&lsaquo;</span></a></li>
+          `;
+        }
+
+        // 페이지 번호
+        for (let i = startPage ; i < endPage ; i++) {
+          const active = ((i) === (pagination.currentPage-1)) ? 'class="active"' : '';
+          html += '<li '+active+'><a href="javascript:void(0)" onclick="findAll(\''+(i+1)+'\')">'+(i+1)+'</a></li>';
+        }
+
+        // 다음 페이지, 마지막 페이지
+        if (pagination.hasNext) {
+          html += `
+            <li><a href="javascript:void(0)" onclick="findAll(`+(nextStartPage)+`);" aria-label="Next"><span aria-hidden="true">&rsaquo;</span></a></li>
+            <li><a href="javascript:void(0)" onclick="findAll(`+(pagination.totalPage)+`);" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>
+          `;
+        }
+
+        document.querySelector('.pagination').innerHTML = html;
+      }
+
+      /**
+       * 게시글 리스트 조회
+       */
+      function findAll(page) {
+
+        const pageParams = Number(new URLSearchParams(location.search).get('page'));
+        page = page ? page : (pageParams ? pageParams : 1);
+
+        const form = document.getElementById('searchForm');
+
+        var params = {
+          currentPage: page
+          , searchStore: form.searchStore.value
+          , searchMaterial: form.searchMaterial.value
+          , searchStep: form.searchStep.value
+          , recordCount: form.recordCount.value
+          , searchWord: form.searchWord.value
+        }
+        checkListNullParams(params);
+
+        const queryString = new URLSearchParams(params).toString();
+        const replaceUri = location.pathname + '?' + queryString;
+        const orderstep = /*[[${orderstep}]]*/;
+        const customerno = /*[[${customerno}]]*/;
+
+        history.replaceState({}, '', replaceUri);
+        var url = '/api/order/customer/list/'+customerno;
+        if(orderstep != null && orderstep != '')
+          url += '/'+orderstep;
+
+        getJson(url, params).then(response => {
+          if (!Object.keys(response).length || response.list == null || response.list.length == 0) {
+            document.getElementById('list').innerHTML = '<td colspan="14" class="text-center">주문내역이 없습니다.</td>';
+            drawPages();
+            return false;
+          }
+
+          let html = '';
+          let num = response.params.totalCount - (response.params.currentPage-1) * response.params.recordCount;
+
+          response.list.forEach((obj, idx) => {
+            html += `
+              <tr class="small">
+                <td class="text-center">
+                  <a href="javascript: void(0);" onclick="fncPopupView('`+checkNullVal(obj.orderNo)+`','`+checkNullVal(obj.orderType)+`'); return false;">` + (num--) + `</a>
+                </td>
+                <td class="text-center">
+                  <input type="hidden" id="orderTypeArr_`+checkNullVal(obj.orderNo)+`" value="`+checkNullVal(obj.orderType)+`"/>
+                  <div>접:` + checkSubstringNullVal(obj.receiptDt,0,10) + `</div>
+                  <div>주:` + checkSubstringNullVal(obj.expectedOrdDt,0,10) + `</div>
+                </td>
+                <td class="text-center">`+ (checkNullVal(obj.orderType) == 'CUSTOMER' ? '고객<br/>주문' : '기성<br/>주문') + `</td>
+                <td class="text-center bold">
+                  `+checkNullVal(codemap[obj.storeCd])+`<br/>`+checkNullVal(obj.customerNm)+`
+                </td>
+            `;
+            html += `
+                <td class="text-center">` + checkNullVal(obj.modelId)+`</td>
+                <td class="text-center"><span class="important">` + checkNullVal(codemap[obj.materialCd])+`</span><br/>`+checkNullVal(codemap[obj.colorCd])+`</td>
+                <td class="text-center">` + checkNullVal(obj.quantity) + `</td>
+                <td class="text-center">` + checkNullVal(obj.mainStoneType) + `<br/>` + checkNullVal(obj.subStoneType) + `</td>
+                <td class="text-center">` + checkNullVal(obj.size) + `</td>
+                <td class="text-left">` + checkNullVal(obj.orderDesc) + `</td>
+                <td class="text-center">` + checkNullVal(obj.venderNm) + `<br/>` + checkNullVal(obj.venderNo) + `</td>
+                <td class="text-center">` + checkNullVal(obj.orderStep) + `</td>
+              </tr>
+            `;
+          });
+
+
+          document.getElementById('list').innerHTML = html;
+          drawPages(response.params);
+        });
+      }
+
+      /**
+       * 수정하기
+       */
+      function fncPopupView(orderno, ordertype) {
+        var url = ordertype == 'CUSTOMER' ? "/order/popup/customer/"+orderno : "/order/popup/read-made/"+orderno;
+        var name = "orderViewPopup";
+        var option = "width = 1150, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+      }
+
+      /**
+       * 수정하기
+       */
+      function fncPopupModify(customerno) {
+        var url = "/order/popup/modify/"+customerno;
+        var name = "orderModifyPopup";
+        var option = "width = 1000, height = 800, top = 100, left = 200, location = no";
+        window.open(url, name, option);
+      }
+
+      function fncRemove(){
+
+        var orderscheckcnt = 0;
+        $(".form-check").each(function(){
+          if($(this).is(":checked")){
+            orderscheckcnt++;
+          }
+        });
+
+        if(orderscheckcnt == 0){
+          alert('삭제할 주문이력을 선택해주세요.');
+          return false;
+        }
+
+        if(confirm('삭제하시겠습니까?')){
+          const form = document.getElementById('searchForm');
+          const writeForm = new FormData(form);
+
+          const formData = new FormData();
+          $(".form-check").each(function(){
+            if($(this).is(":checked")){
+              formData.append("orderNoArr[]", checkNullVal($(this).val()));
+            }
+          });
+
+          fetch('/api/order/orders/remove', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': getToken()
+            },
+            body: formData
+          }).then(response => {
+            if(!response.ok){
+              throw new Error('Request Failed...');
+            }
+            alert('삭제되었습니다.');
+            findAll();
+          }).catch(error => {
+            alert('오류가 발생하였습니다.');
+          });
+        }
+      }
+		/*]]>*/
+	</script>
+</th:block>
+</html>

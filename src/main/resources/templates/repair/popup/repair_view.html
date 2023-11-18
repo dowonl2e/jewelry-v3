@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="layout/admin_popup_layout">
+<th:block layout:fragment="content">
+  <div class="card shadow mt-4 mb-4">
+    <div class="card-header py-3 text-center">
+      <h6 class="m-0 font-weight-bold text-primary">수리 등록</h6>
+    </div>
+    <div class="card-body">
+      <form id="form" class="form-horizontal">
+        <div class="row text-center border-bottom">
+          <div class="col bg-light" style="line-height:40px;">제품 사진</div>
+        </div>
+        <div class="row text-center">
+          <div class="col"><img id="repair_img" width="640px" height="480px" class="m10"/></div>
+        </div>
+
+        <div class="table-responsive clearfix">
+          <table class="table">
+            <colgroup>
+              <col width="20%"/>
+              <col width="30%"/>
+              <col width="20%"/>
+              <col width="30%"/>
+            </colgroup>
+            <tr>
+              <th colspan="4">고객 정보</th>
+            </tr>
+            <tr>
+              <th>고객번호</th>
+              <td id="customer_no_td"></td>
+              <th>고객명</th>
+              <td id="customer_nm_td"></td>
+            </tr>
+            <tr>
+              <th>연락처</th>
+              <td colspan="3" id="customer_cel_td"></td>
+            </tr>
+            <tr>
+              <th colspan="4">수리 정보</th>
+            </tr>
+            <tr>
+              <th>수리품명</th>
+              <td colspan="3" id="repair_nm_td"></td>
+            </tr>
+            <tr>
+              <th>수리 요청일</th>
+              <td id="repair_req_dt_td"></td>
+              <th>수리 완료 예정일</th>
+              <td id="repair_due_dt_td"></td>
+            </tr>
+            <tr>
+              <th>수리 완료일</th>
+              <td colspan="3" id="repair_res_dt_td"></td>
+            </tr>
+            <tr class="border-bottom">
+              <th>비고</th>
+              <td colspan="3" id="repair_desc_td"></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="btn_wrap text-center">
+          <span id="modify-auth1"></span>
+          <a href="javascript: void(0);" onclick="fncClose(); return false;" class="btn btn-secondary waves-effect waves-light mlr5">닫기</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:inline="javascript">
+		/*<![CDATA[*/
+			window.onload = () => {
+				find();
+	  	}
+
+			function find() {
+        if(!isValidToken())
+          return false;
+
+				const repairno = /*[[${repairno}]]*/;
+				if ( !repairno ) {
+		    	return false;
+		    }
+
+				fetch(`/api/repair/`+repairno, {
+				  method: 'GET',
+				  headers: {
+            'Authorization': getToken()
+          }
+				}).then(response => {
+		    	if (!response.ok) {
+						throw new Error('Request failed...');
+			    }
+		    	return response.json();
+
+		   	}).then(json => {
+		   	  if(checkNullVal(json.menuAuthResponseDto.viewAuth) != 'Y'){
+            altNoAuth();
+            fncParentRefresh();
+            fncClose();
+            return false;
+		   	  }
+
+		   	  if(checkNullVal(json.menuAuthResponseDto.modifyAuth) == 'Y'){
+		   	    document.getElementById('modify-auth1').innerHTML = `
+		   	      <a href="javascript: void(0);" onclick="goModify(); return false;" class="btn btn-primary waves-effect waves-light mlr5">수정</a>
+		   	    `;
+		   	  }
+
+
+		   		let filePath = checkNullVal(json.filePath);
+		   		let fileNm = checkNullVal(json.fileNm);
+
+		   		if(fileNm == '')
+		   			document.getElementById('repair_img').src = '/img/no-image.png';
+		   		else
+		   			document.getElementById('repair_img').src = '/file/image/display?filePath='+filePath+'&fileName='+fileNm;
+
+		   		document.getElementById('customer_no_td').innerHTML = checkNullVal(json.customerNo);
+		   		document.getElementById('customer_nm_td').innerHTML = checkNullVal(json.customerNm);
+		   		document.getElementById('customer_cel_td').innerHTML = checkNullVal(json.customerCel);
+		   		document.getElementById('repair_nm_td').innerHTML = checkNullVal(json.repairNm);
+		   		document.getElementById('repair_req_dt_td').innerHTML = checkSubstringNullVal(json.repairReqDt,0,10);
+		   		document.getElementById('repair_due_dt_td').innerHTML = checkSubstringNullVal(json.repairDueDt,0,10);
+		   		document.getElementById('repair_res_dt_td').innerHTML = checkSubstringNullVal(json.repairResDt,0,10);
+		   		document.getElementById('repair_desc_td').innerHTML = checkNullVal(json.repairDesc);
+
+		   	}).catch(error => {
+		    	alert('수리 정보를 찾을 수 없습니다.');
+		    	fncParentRefresh();
+		    	fncClose();
+		   	});
+			}
+
+			/**
+			 * 수정하기
+			 */
+			function goModify() {
+        const repairno = /*[[${repairno}]]*/;
+		    location.href = '/repair/popup/modify/'+repairno;
+			}
+
+		/*]]>*/
+  </script>
+</th:block>
+</html>
