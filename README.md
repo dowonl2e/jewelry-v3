@@ -1,14 +1,11 @@
-# jewelry-v2
-Jewelry Management System Version 2
+# jewelry-v3
+Jewelry Management System With JPA & QueryDSL
 
-## 프로젝트 업데이트 내용
-- JSP에서 Thymeleaf로 변경
-- 세션기반에서 JWT(Json Web Token) 인증
-- Token 인증을 통한 메뉴 권한 처리 변경
-- Redis를 통한 Refresh Token 관리
+## 업데이트 내용
+- SQLMapper 방식에서 JPA & QueryDSL로 변경
 
-## 프로젝트 기간
-2023.04.01 ~ 2022.06.01
+## 기간
+2023.09.01 ~ 2022.11.18
 
 ## 개발환경
 - IDE : IntelliJ IDE CE, MySQLWorkbench
@@ -20,8 +17,7 @@ Jewelry Management System Version 2
 
 ### Back-End
 - Program Languages : Java 17
-- Framework / Library : Spring Boot, Spring Security, Spring Data JPA, Mybatis, Docker, JWT(Json Web Token)
-- Server : Tomcat 9.0
+- Framework / Library : Spring Boot, Spring Security, Spring Data JPA, QueryDSL, Docker, JWT(Json Web Token)
 - Build Tool : Gradle
 - Database : MySQL 8.0
 
