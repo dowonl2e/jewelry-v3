@@ -22,11 +22,18 @@
         </div>
       </div>
 
-      <div class="form-group row border-top border-bottom">
+      <div class="form-group row border-top">
         <div class="col-sm-3 text-right mt10">사용여부</div>
         <div class="col-sm-8 mt10">
           <input type="radio" name="useYn" id="use_y" value="Y" checked="checked"/><label for="use_y">&nbsp;사용</label>&nbsp;
           <input type="radio" name="useYn" id="use_n" value="N"/><label for="use_n">&nbsp;미사용</label>
+        </div>
+      </div>
+
+      <div class="form-group row border-top border-bottom">
+        <div class="col-sm-3 text-right mt10">코드설명</div>
+        <div class="col-sm-8 mt10 mb10">
+          <textarea name="cdDesc" id="cdDesc" class="form-control"></textarea>
         </div>
       </div>
 
@@ -54,6 +61,7 @@
           cdId : form.cdId.value,
           cdNm : form.cdNm.value,
           useYn : form.useYn.value,
+          cdDesc : form.cdDesc.value,
           cdDepth : 1,
           upCdId : '00'
         };

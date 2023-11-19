@@ -20,6 +20,7 @@ public class Code {
   private Integer cdOrd;
   private String upCdId;
   private Integer cdDepth;
+  private String cdDesc;
   private String useYn;
   private String inptId;
   private LocalDateTime inptDt = LocalDateTime.now();
@@ -36,14 +37,15 @@ public class Code {
   @Builder
   public Code(
       String cdId, String cdNm, Integer cdOrd
-      , String upCdId, Integer cdDepth, String useYn
-      , String inptId
+      , String upCdId, Integer cdDepth, String cdDesc
+      , String useYn, String inptId
   ){
     this.cdId = cdId;
     this.cdNm = cdNm;
     this.cdOrd = cdOrd;
     this.upCdId = upCdId;
     this.cdDepth = cdDepth;
+    this.cdDesc = cdDesc;
     this.useYn = useYn;
     this.inptId = inptId;
   }

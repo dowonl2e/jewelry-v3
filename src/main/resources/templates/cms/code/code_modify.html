@@ -22,11 +22,18 @@
         </div>
       </div>
 
-      <div class="form-group row border-top border-bottom">
+      <div class="form-group row border-top">
         <div class="col-sm-3 text-right mt10">사용여부</div>
         <div class="col-sm-8 mt10">
           <input type="radio" name="useYn" id="use_y" value="Y"/><label for="use_y">&nbsp;사용</label>&nbsp;
           <input type="radio" name="useYn" id="use_n" value="N"/><label for="use_n">&nbsp;미사용</label>
+        </div>
+      </div>
+
+      <div class="form-group row border-top border-bottom">
+        <div class="col-sm-3 text-right mt10">코드설명</div>
+        <div class="col-sm-8 mt10 mb10">
+          <textarea name="cdDesc" id="cdDesc" class="form-control"></textarea>
         </div>
       </div>
 
@@ -79,10 +86,11 @@
           }
 
 		   		const form = document.getElementById('form');
-		   		form.cdId.value = json.cdId;
-		   		form.cdNm.value = json.cdNm;
+		   		form.cdId.value = checkNullVal(json.cdId);
+		   		form.cdNm.value = checkNullVal(json.cdNm);
 		   		checkNullVal(json.useYn) == 'N' ? form.use_n.checked = true : form.use_n.checked = false;
 		   		checkNullVal(json.useYn) == 'Y' ? form.use_y.checked = true : form.use_y.checked = false;
+		   		form.cdDesc.value = checkNullVal(json.cdDesc);
 
 		   	}).catch(error => {
 		    	alert('코드 정보를 찾을 수 없습니다.');
@@ -101,6 +109,7 @@
           const params = {
             cdNm : form.cdNm.value,
             useYn : form.useYn.value,
+            cdDesc : form.cdDesc.value,
           };
 
           fetch(`/api/code/`+cdid, {

@@ -39,7 +39,8 @@ public class CodeRepositoryImpl implements CodeRepositoryCustom{
         .select(new QCodeResponseDto(
             code.cdId, code.cdNm, code.cdOrd
             , code.upCdId, code.cdDepth, code.useYn
-            , code.inptId, userEntity.userName, code.inptDt)
+            , code.inptId, userEntity.userName
+            , code.inptDt)
         )
         .from(code)
         .leftJoin(code.userEntity, userEntity)
@@ -101,8 +102,8 @@ public class CodeRepositoryImpl implements CodeRepositoryCustom{
         .select(
             Projections.fields(CodeResponseDto.class,
               code.cdId, code.cdNm, code.cdOrd
-              , code.upCdId, code.cdDepth, code.useYn
-              , code.inptId, code.inptDt
+              , code.upCdId, code.cdDepth, code.cdDesc
+              , code.useYn, code.inptId, code.inptDt
               , ExpressionUtils.as(
                   JPAExpressions
                       .select(subCode.cdId.count())
@@ -142,6 +143,7 @@ public class CodeRepositoryImpl implements CodeRepositoryCustom{
         .set(code.updtDt, LocalDateTime.now())
         .set(code.updtId, codeDto.getUpdtId())
         .set(code.cdNm, codeDto.getCdNm())
+        .set(code.cdDesc, codeDto.getCdDesc())
         .set(code.useYn, codeDto.getUseYn())
         .where(code.cdId.eq(codeDto.getCdId()))
         .execute();

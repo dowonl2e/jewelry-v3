@@ -16,6 +16,7 @@ public class CodeDto extends CommonDto {
   private Integer cdOrd;
   private String upCdId;
   private Integer cdDepth;
+  private String cdDesc;
   private String useYn;
   private String[] upCdIdArr;
   public Code toEntity(){
@@ -25,6 +26,7 @@ public class CodeDto extends CommonDto {
         .cdOrd(this.cdOrd)
         .upCdId(this.upCdId)
         .cdDepth(this.cdDepth)
+        .cdDesc(this.cdDesc)
         .useYn(this.useYn)
         .inptId(super.getInptId())
         .build();
