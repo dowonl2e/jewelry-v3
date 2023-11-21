@@ -5,8 +5,10 @@ import com.jewelry.stock.dto.QStockResponseDto;
 import com.jewelry.stock.dto.StockDto;
 import com.jewelry.stock.dto.StockResponseDto;
 import com.jewelry.util.Utils;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.impl.JPAUpdateClause;
@@ -436,15 +438,12 @@ public class StockRepositoryImpl implements StockRepositoryCustom{
   private BooleanExpression regDtLoe(String searchEddt){
     return searchEddt != null ? stock.regDt.loe(Utils.convertLocalDateTime(searchEddt)) : null;
   }
-  private BooleanExpression customerNmLike(String word){
-    return word != null ? stock.customerNm.like("%"+word+"%") : null;
-  }
-  private BooleanExpression modelIdLike(String word){
-    return word != null ? stock.modelId.like("%"+word+"%") : null;
-  }
   private BooleanExpression wordLike(String word){
-    BooleanExpression expression = customerNmLike(word);
-    return expression == null ? modelIdLike(word) : expression.or(modelIdLike(word));
+    return ObjectUtils.isEmpty(word) ? null :
+        Expressions.numberTemplate(
+            Double.class,
+            "function('match2',{0},{1},{2})",
+            stock.customerNm,stock.modelId,word
+        ).gt(0);
   }
-
 }
