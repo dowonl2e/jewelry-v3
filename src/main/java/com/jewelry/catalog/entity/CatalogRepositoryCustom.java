@@ -14,10 +14,6 @@ public interface CatalogRepositoryCustom {
 
   Page<CatalogResponseDto> getSearchCatalogs(final SearchDto searchDto, final Pageable pageable);
 
-  Long insertCatalog(final CatalogDto catalogDto);
-
-  Long insertCatalogStones(final CatalogStoneDto catalogStoneDto);
-
   CatalogResponseDto getCatalog(final Long catalogNo);
 
   List<CatalogStoneResponseDto> getCatalogStones(final Long catalogNo);
