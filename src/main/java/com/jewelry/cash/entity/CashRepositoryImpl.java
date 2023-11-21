@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.jewelry.cash.entity.QCash.cash;
+import static com.jewelry.stock.entity.QStock.stock;
 
 @RequiredArgsConstructor
 public class CashRepositoryImpl implements CashRepositoryCustom {
@@ -123,14 +124,13 @@ public class CashRepositoryImpl implements CashRepositoryCustom {
     return eddt != null ? cash.regDt.loe(Utils.convertLocalDateTime(eddt)) : null;
   }
   private BooleanExpression wordLike(String word){
-    BooleanExpression expression = venderNmLike(word);
-    return expression == null ? historyDescLike(word) : expression.or(historyDescLike(word));
-  }
-  private BooleanExpression venderNmLike(String word){
-    return word != null ? cash.venderNm.like("%"+word+"%") : null;
-  }
-  private BooleanExpression historyDescLike(String word){
-    return word != null ? cash.historyDesc.like("%"+word+"%") : null;
+    return ObjectUtils.isEmpty(word) ? null :
+        Expressions.numberTemplate(
+            Double.class,
+            "function('match2',{0},{1},{2})",
+            cash.venderNm, cash.historyDesc, word
+        ).gt(0);
+
   }
   @Override
   public List<CashResponseDto> getCashStatsList(SearchDto searchDto, Pageable pageable) {
