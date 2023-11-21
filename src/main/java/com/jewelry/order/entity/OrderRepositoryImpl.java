@@ -6,6 +6,7 @@ import com.jewelry.order.dto.OrderResponseDto;
 import com.jewelry.order.dto.QOrderResponseDto;
 import com.jewelry.util.Utils;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.impl.JPAUpdateClause;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +23,7 @@ import static com.jewelry.customer.entity.QCustomer.customer;
 import static com.jewelry.order.entity.QOrder.order;
 import static com.jewelry.file.entity.QFile.file;
 import static com.jewelry.repair.entity.QRepair.repair;
+import static com.jewelry.stock.entity.QStock.stock;
 
 @RequiredArgsConstructor
 public class OrderRepositoryImpl implements OrderRepositoryCustom {
@@ -124,9 +127,12 @@ public class OrderRepositoryImpl implements OrderRepositoryCustom {
     return word != null ? order.venderNm.like("%"+word+"%") : null;
   }
   private BooleanExpression wordLike(String word){
-    BooleanExpression expression = customerNmLike(word);
-    expression = expression == null ? modelIdLike(word) : expression.or(modelIdLike(word));
-    return expression == null ? venderNmLike(word) : expression.or(venderNmLike(word));
+    return ObjectUtils.isEmpty(word) ? null :
+        Expressions.numberTemplate(
+            Double.class,
+            "function('match3',{0},{1},{2},{3})",
+            order.customerNm, order.modelId, order.venderNm, word
+        ).gt(0);
   }
   private BooleanExpression wordWithCustomerLike(String word){
     BooleanExpression expression = contractorNmLike(word);
