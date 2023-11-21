@@ -40,11 +40,11 @@ spring:
       connection-timeout: 30000
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
       idle-timeout: 600000
-      jdbc-url: jdbc:log4jdbc:mysql://{db-hostname}/{db-name}?serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&allowMultiQueries=true
+      jdbc-url: jdbc:log4jdbc:mysql://{db-ip}:{db-port}/{db}?serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&allowMultiQueries=true
       max-lifetime: 1800000
       maximum-pool-size: 10
       minimum-idle: 1
-      username: { db-uesrname }
+      username: { db-username }
       password: { db-password }
   servlet:
     multipart:
@@ -60,35 +60,36 @@ spring:
         physical-strategy: com.jewelry.config.strategy.CustomCamelCaseToUnderscoresNamingStrategy
     properties:
       hibernate:
+        dialect: com.jewelry.config.dialect.CustomMySQLDialect
         format_sql: true
         highlight_sql: true
         use_sql_comments: false
   redis:
-    port: 6379
-    host: 127.0.0.1
+    port: { redis-port }
+    host: { redis-host }
 
 cloud:
   aws:
     region:
-      static: { aws-region-static }
+      static: { s3-bucket-static }
     s3:
       bucket:
-        name: { bucket-name }
-        region: {bucket-region}
+        name: { s3-bucket-name }
+        region: { s3-bucket-region }
       iam:
-        accesskey: { accesskey }
-        secretkey: { secretkey }
-      path: { s3-path }
+        accesskey: { s3-bucket-accesskey }
+        secretkey: { s3-bucket-secretkey }
+      path: { s3-bucket-path }
     stack:
       auto: false
-
 
 jwt:
   header: Authorization
   secret: { jwt-secret }
-  access-token-validity-in-seconds: 1800
+  access-token-validity-in-seconds: 1800 #30분
   refresh-token-validity-in-seconds: 1296000  #15일
   value:
     authorization: Authorization
-    grant: Bearer
+    grant: { jwt-grant }
+
 
