@@ -8,12 +8,12 @@ import javax.persistence.Id;
 
 @Entity
 @Subselect(
-    "SELECT CUSTOMER_NO, COUNT(CUSTOMER_NO) AS SALE_CNT, SUM(SALE_PRICE) AS SALE_PRICE " +
-        "FROM TB_STOCK " +
-        "WHERE IFNULL(CUSTOMER_NO,0) > 0 " +
-        "AND SALE_YN = 'Y' " +
-        "AND DEL_YN = 'N' " +
-        "GROUP BY CUSTOMER_NO"
+    "SELECT customer_no, COUNT(customer_no) AS sale_cnt, SUM(sale_price) AS sale_price " +
+        "FROM tb_stock " +
+        "WHERE IFNULL(customer_no,0) > 0 " +
+        "AND sale_yn = 'Y' " +
+        "AND del_yn = 'N' " +
+        "GROUP BY customer_no"
 )
 @Immutable
 public class SaleCustomerCnt {

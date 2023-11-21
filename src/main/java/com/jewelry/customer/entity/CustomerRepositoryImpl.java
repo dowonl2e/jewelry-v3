@@ -40,8 +40,8 @@ public class CustomerRepositoryImpl implements CustomerRepositoryCustom {
         .select(new QCustomerResponseDto(
             customer.customerNo, customer.contractCd, customer.etc
             , customer.contractorNm, customer.contractorCel, customer.regDt
-            , orderCustomerCnt.orderCnt.coalesce(0), repairCustomerCnt.repairCnt.coalesce(0), orderCustomerCnt.reserveCnt.coalesce(0)
-            , saleCustomerCnt.saleCnt.coalesce(0), saleCustomerCnt.salePrice.coalesce(0))
+            , orderCustomerCnt.orderCnt.coalesce(0).as("orderCnt"), repairCustomerCnt.repairCnt.coalesce(0).as("repairCnt"), orderCustomerCnt.reserveCnt.coalesce(0).as("reserveCnt")
+            , saleCustomerCnt.saleCnt.coalesce(0).as("saleCnt"), saleCustomerCnt.salePrice.coalesce(0).as("salePrice"))
         )
         .from(customer)
         .leftJoin(orderCustomerCnt)

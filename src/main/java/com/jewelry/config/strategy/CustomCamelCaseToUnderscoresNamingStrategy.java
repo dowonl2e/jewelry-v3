@@ -10,7 +10,7 @@ public class CustomCamelCaseToUnderscoresNamingStrategy extends CamelCaseToUnder
   @Override
   protected Identifier getIdentifier(String name, final boolean quoted, final JdbcEnvironment jdbcEnvironment) {
     if ( isCaseInsensitive( jdbcEnvironment ) ) {
-      name = name.toUpperCase( Locale.ROOT );
+      //name = name.toUpperCase( Locale.ROOT );
     }
     return new Identifier( name, quoted );
   }

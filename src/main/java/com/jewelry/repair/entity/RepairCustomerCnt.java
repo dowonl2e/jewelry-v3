@@ -8,10 +8,10 @@ import javax.persistence.Id;
 
 @Entity
 @Subselect(
-    "SELECT CUSTOMER_NO, COUNT(CUSTOMER_NO) AS REPAIR_CNT " +
-        "FROM TB_REPAIR " +
-        "WHERE DEL_YN = 'N' " +
-        "GROUP BY CUSTOMER_NO"
+    "SELECT customer_no, COUNT(customer_no) AS repair_cnt " +
+        "FROM tb_repair " +
+        "WHERE del_yn = 'N' " +
+        "GROUP BY customer_no"
 )
 @Immutable
 public class RepairCustomerCnt {
