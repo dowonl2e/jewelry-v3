@@ -3,12 +3,14 @@ package com.jewelry.catalog.entity;
 import static com.jewelry.catalog.entity.QCatalog.catalog;
 import static com.jewelry.catalog.entity.QCatalogStone.catalogStone;
 import static com.jewelry.file.entity.QFile.file;
+import static com.jewelry.stock.entity.QStock.stock;
 import static com.jewelry.vender.entity.QVender.vender;
 
 import com.jewelry.catalog.dto.*;
 import com.jewelry.catalog.value.CatalogEnum;
 import com.jewelry.common.domain.SearchDto;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.LiteralExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -65,7 +67,7 @@ public class CatalogRepositoryImpl implements CatalogRepositoryCustom {
         .where(
             delYnEq(searchDto.getSearchDelYn()),
             venderNoEq(searchDto.getSearchVender()),
-            wordLike(searchDto.getSearchType(), searchDto.getSearchWord())
+            wordLike(searchDto.getSearchWord())
         )
         .orderBy(catalog.regDt.desc(), catalog.catalogNo.desc())
         .offset(pageable.getOffset())
@@ -80,7 +82,7 @@ public class CatalogRepositoryImpl implements CatalogRepositoryCustom {
         .where(
             delYnEq(searchDto.getSearchDelYn()),
             venderNoEq(searchDto.getSearchVender()),
-            wordLike(searchDto.getSearchType(), searchDto.getSearchWord())
+            wordLike(searchDto.getSearchWord())
         );
   }
 
@@ -90,88 +92,13 @@ public class CatalogRepositoryImpl implements CatalogRepositoryCustom {
   private BooleanExpression venderNoEq(Long venderNo){
     return venderNo != null ? catalog.venderNo.eq(venderNo) : null;
   }
-  private BooleanExpression modelIdLike(String word){
-    return word != null ? catalog.modelId.like("%"+word+"%") : null;
-  }
-  private BooleanExpression modelNmLike(String word){
-    return word != null ? catalog.modelNm.like("%"+word+"%") : null;
-  }
-
-  private BooleanExpression wordLike(String type, String word){
-    if(type == null){
-      BooleanExpression expression = modelIdLike(word);
-      return expression == null ? modelNmLike(word) : expression.or(modelNmLike(word));
-    }
-    else if(type.equals(CatalogEnum.ID))
-      return modelIdLike(word);
-    else if(type.equals(CatalogEnum.NAME))
-      return modelNmLike(word);
-    else
-      return null;
-  }
-
-  /**
-   * QueryDSL 라이브러리 문제로 미사용
-   */
-  @Deprecated
-  @Override
-  public Long insertCatalog(final CatalogDto catalogDto){
-    long insertCnt = queryFactory
-        .insert(catalog)
-        .columns(
-            catalog.catalogNo, catalog.venderNo, catalog.modelId, catalog.modelNm
-            , catalog.stddMaterialCd, catalog.stddWeight, catalog.stddColorCd
-            , catalog.stddSize, catalog.odrNotice, catalog.regDt
-            , catalog.basicIdst, catalog.mainPrice, catalog.subPrice
-            , catalog.totalPrice, catalog.inptId
-        )
-        .values(
-            catalogDto.getCatalogNo(), catalogDto.getVenderNo(), catalogDto.getModelId(), catalogDto.getModelNm()
-            , catalogDto.getStddMaterialCd(), catalogDto.getStddWeight(), catalogDto.getStddColorCd()
-            , catalogDto.getStddSize(), catalogDto.getOdrNotice(), catalogDto.getRegDt()
-            , catalogDto.getBasicIdst(), catalogDto.getMainPrice(), catalogDto.getSubPrice()
-            , catalogDto.getTotalPrice(), catalogDto.getInptId()
-        )
-        .execute();
-    return insertCnt == 0 ? 0 : catalogDto.getCatalogNo();
-  }
-
-  /**
-   * QueryDSL 라이브러리 문제로 미사용
-   */
-  @Deprecated
-  @Override
-  public Long insertCatalogStones(CatalogStoneDto catalogStoneDto) {
-    long insertCnt = 0;
-//    if(ObjectUtils.isEmpty(catalogStoneDto.getStoneNmArr())){
-//      return insertCnt;
-//    }
-//
-//    String[] stoneNmArr = catalogStoneDto.getStoneNmArr();
-//    String[] stoneTypeCdArr = catalogStoneDto.getStoneTypeCdArr();
-//    Integer[] beadCntArr = catalogStoneDto.getBeadCntArr();
-//    String[] purchasePriceArr = catalogStoneDto.getPurchasePriceArr();
-//    String[] stoneDescArr = catalogStoneDto.getStoneDescArr();
-//
-//    for(int i = 0 ; i < stoneNmArr.length ; i++){
-//      insertCnt += queryFactory
-//          .insert(catalogStone)
-//          .columns(
-//              catalogStone.catalogNo, catalogStone.stoneTypeCd
-//              , catalogStone.stoneNm, catalogStone.beadCnt
-//              , catalogStone.purchasePrice, catalogStone.stoneDesc
-//              , catalogStone.inptId
-//          )
-//          .values(
-//              catalogStoneDto.getCatalogNo(), stoneTypeCdArr[i]
-//              , stoneNmArr[i], beadCntArr[i]
-//              , purchasePriceArr[i], stoneDescArr[i]
-//              , catalogStoneDto.getInptId()
-//          )
-//          .execute();
-//    }
-
-    return insertCnt;
+  private BooleanExpression wordLike(String word){
+    return ObjectUtils.isEmpty(word) ? null :
+        Expressions.numberTemplate(
+            Double.class,
+            "function('match2',{0},{1},{2})",
+            catalog.modelId,catalog.modelNm,word
+        ).gt(0);
   }
 
   @Override
