@@ -1,11 +1,8 @@
 package com.jewelry.aop;
 
-import com.jewelry.cms.menu.domain.MenuAuthVO;
 import com.jewelry.cms.menu.dto.MenuAuthDto;
 import com.jewelry.cms.menu.dto.MenuAuthResponseDto;
 import com.jewelry.cms.menu.entity.MenuAuthRepositoryImpl;
-import com.jewelry.cms.menu.mapper.MenuAuthMapper;
-import com.jewelry.common.domain.CommonTO;
 import com.jewelry.common.domain.CommonVO;
 import com.jewelry.common.domain.SearchDto;
 import com.jewelry.common.dto.CommonDto;
@@ -73,18 +70,18 @@ public class AuthorityAspect {
     boolean isIUD = false, isAuthed = false;
     if(methodName.indexOf("insert") == 0){
       isIUD = true;
-      isAuthed = ObjectUtils.nullSafeEquals(authResponseDto.getWriteAuth(), "Y") ? true : false;
+      isAuthed = ObjectUtils.nullSafeEquals(authResponseDto.getWriteAuth(), "Y");
     }
     else if(methodName.indexOf("update") == 0){
       isIUD = true;
-      if(methodName.indexOf("delete") > -1)
-        isAuthed = ObjectUtils.nullSafeEquals(authResponseDto.getRemoveAuth(), "Y") ? true : false;
+      if(methodName.contains("delete"))
+        isAuthed = ObjectUtils.nullSafeEquals(authResponseDto.getRemoveAuth(), "Y");
       else
-        isAuthed = ObjectUtils.nullSafeEquals(authResponseDto.getModifyAuth(), "Y") ? true : false;
+        isAuthed = ObjectUtils.nullSafeEquals(authResponseDto.getModifyAuth(), "Y");
     }
     else if(methodName.indexOf("delete") == 0){
       isIUD = true;
-      isAuthed = ObjectUtils.nullSafeEquals(authResponseDto.getRemoveAuth(), "Y") ? true : false;
+      isAuthed = ObjectUtils.nullSafeEquals(authResponseDto.getRemoveAuth(), "Y");
     }
 
     if(isIUD && !isAuthed){
