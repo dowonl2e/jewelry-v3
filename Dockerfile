@@ -1,5 +1,7 @@
 FROM openjdk:17-alpine
 
-COPY build/libs/jewelry-3.1.1-SNAPSHOT.jar jewelry.jar
+ARG JAR_FILE=build/libs/jewelry-3.1.1-SNAPSHOT.jar
+
+COPY ${JAR_FILE} jewelry.jar
 
 ENTRYPOINT ["java","-Dspring.profiles.active=docker", "-jar", "jewelry.jar"]
