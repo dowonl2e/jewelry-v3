@@ -38,7 +38,7 @@
                                     </div>
                                     <form id="form" class="user">
                                         <div class="form-group">
-                                            <input type="text" id="user_id" class="form-control form-control-user" aria-describedby="emailHelp" placeholder="ID" onchange="fncCheckEng(this);">
+                                            <input type="text" id="user_id" class="form-control form-control-user" aria-describedby="emailHelp" placeholder="ID">
                                         </div>
                                         <div class="form-group">
                                             <input type="password" id="user_pwd" class="form-control form-control-user" placeholder="Password">
@@ -59,6 +59,11 @@
 		/*<![CDATA[*/
       $(document).ready(function(){
         $("#user_id").focus();
+
+        $("#user_id").on('change keyup', function() {
+          fncCheckEng(this);
+        });
+
         $("input").keydown(function(key) {
           if(key.keyCode == 13) {
             $("#loginBtn").click();
@@ -110,10 +115,11 @@
 
 			function fncCheckEng(obj){
 				if($(obj).val() != ''){
-					const regex = /^[a-z|A-Z]+$/;
+					const regex = /^[A-Za-z0-9]+$/;
 					if(!regex.test($(obj).val())){
-						alert('영문만 입력해주세요.');
+						alert('영문 포함 숫자만 입력해주세요.');
 						$(obj).val('');
+						$("#user_pwd").val('');
 					}
 				}
 			}
