@@ -66,9 +66,11 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ec2-user
           key: ${{ secrets.PRIVATE_KEY }}
+          port: ${{ secrets.REMOTE_SSH_PORT }}
           script: |
             sudo docker pull ${{ secrets.DOCKER_REPO }}/jewelry:latest
             sudo docker stop $(docker ps -a -q)
             sudo docker rm $(docker ps --filter 'status=exited' -a -q)
-            sudo docker run -d --log-driver=syslog -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod ${{ secrets.DOCKER_REPO }}/jewelry:latest
-            sudo docker image prune -a -f
+            sudo docker run -p 6379:6379 --name jewelry-redis -d redis:latest --requirepass "${{ secrets.REDIS_PWD }}"
+            sudo docker run -d -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod --name jewelry-spring -d ${{ secrets.DOCKER_REPO }}/jewelry:latest
+            sudo docker image prune -a -f 도커에서 사용하지 않는 이미지들을 삭제하는거 주석
