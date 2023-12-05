@@ -54,7 +54,7 @@ jobs:
         run: |
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           docker build -f Dockerfile -t ${{ secrets.DOCKER_REPO }}/jewelry .
-          docker push ${{ secrets.DOCKER_REPO }}/jewelry:latest
+          docker push ${{ secrets.DOCKER_REPO }}/jewelry
 
       # appleboy/ssh-action@master 액션을 사용하여 지정한 서버에 ssh로 접속하고, script를 실행
       # script의 내용은 도커의 기존 프로세스들을 제거하고, docker repoistory로부터 방금 위에서 push한 내용을 pull 받아 실행
@@ -68,9 +68,9 @@ jobs:
           key: ${{ secrets.PRIVATE_KEY }}
           port: ${{ secrets.REMOTE_SSH_PORT }}
           script: |
-            sudo docker pull ${{ secrets.DOCKER_REPO }}/jewelry:latest
-            sudo docker stop $(docker ps -a -q)
-            sudo docker rm $(docker ps --filter 'status=exited' -a -q)
+            sudo docker rm -f $(docker ps -qa)
+            sudo docker pull ${{ secrets.DOCKER_REPO }}/jewelry
             sudo docker run -p 6379:6379 --name jewelry-redis -d redis:latest --requirepass "${{ secrets.REDIS_PWD }}"
-            sudo docker run -d -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod --name jewelry-spring -d ${{ secrets.DOCKER_REPO }}/jewelry:latest
-            sudo docker image prune -a -f 도커에서 사용하지 않는 이미지들을 삭제하는거 주석
+            sudo docker pull ${{ secrets.DOCKER_REPO }}/jewelry-nginx
+            ./home/ec2-user/compose/docker-compose up -d
+            docker image prune -f
