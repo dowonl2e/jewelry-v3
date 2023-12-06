@@ -72,5 +72,6 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_REPO }}/jewelry
             sudo docker run -p 6379:6379 --name jewelry-redis -d redis:latest --requirepass "${{ secrets.REDIS_PWD }}"
             sudo docker pull ${{ secrets.DOCKER_REPO }}/jewelry-nginx
-            ./home/ec2-user/compose/docker-compose up -d
+            cd /home/ec2-user/compose/
+            docker-compose up -d
             docker image prune -f
