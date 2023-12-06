@@ -70,6 +70,6 @@ jobs:
           script: |
             export IMAGE_TAG=${{ secrets.DOCKER_IMAGE_TAG }}
             export DOCKER_USERNAME=${{ secrets.DOCKER_REPO }}
-            chmod 777 /home/ubuntu/docker/deploy.sh
-            /home/ubuntu/docker/deploy.sh $IMAGE_TAG $DOCKER_USERNAME
+            chmod 777 /home/ec2-user/docker/deploy.sh
+            /home/ec2-user/docker/deploy.sh $IMAGE_TAG $DOCKER_USERNAME
 
