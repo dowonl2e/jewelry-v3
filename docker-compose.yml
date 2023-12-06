@@ -1,0 +1,18 @@
+version: '3'
+services:
+
+  green:
+    container_name: jewelry-green
+    image: ${DOCKER_USERNAME}/jewelry:${IMAGE_TAG}
+    ports:
+      - 8082:8082
+    environment:
+      - SPRING_PROFILES_ACTIVE=green
+
+  blue:
+    container_name: jewelry-blue
+    image: ${DOCKER_USERNAME}/jewelry:${IMAGE_TAG}
+    port:
+      - 8081:8081
+    environment:
+      - SPRING_PROFILES_ACTIVE=blue
