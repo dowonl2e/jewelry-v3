@@ -18,22 +18,28 @@ public class RedisConfig {
   private String redisHost;
 
   @Value("${spring.redis.port}")
-  private String redisPort;
+  private int redisPort;
 
-  @Value("${spring.redis.password}")
-  private String redisPassword;
+//  @Value("${spring.redis.password}")
+//  private String redisPassword;
 
   /**
    * RedisTemplate을 이용한 방식 RedisConnectionFactory 인터페이스를 통해 LettuceConnectionFactory를 생성하여 반환
    */
+//  @Bean
+//  public RedisConnectionFactory redisConnectionFactory() {
+//    final RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+//    redisStandaloneConfiguration.setHostName(redisHost);
+//    redisStandaloneConfiguration.setPort(Integer.parseInt(redisPort));
+//    redisStandaloneConfiguration.setPassword(redisPassword);
+//    return new LettuceConnectionFactory(redisStandaloneConfiguration);
+//  }
+
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
-    final RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-    redisStandaloneConfiguration.setHostName(redisHost);
-    redisStandaloneConfiguration.setPort(Integer.parseInt(redisPort));
-    redisStandaloneConfiguration.setPassword(redisPassword);
-    return new LettuceConnectionFactory(redisStandaloneConfiguration);
+    return new LettuceConnectionFactory(redisHost, redisPort);
   }
+
 
   /**
    * redisTemplate를 받아와서 set, get, delete를 사용
