@@ -70,7 +70,6 @@ public class JwtAuthController {
 					.sameSite("Lax")
 					.build();
 
-			System.out.println("체크 토큰 : " + reissueTokenVo.getAccessToken());
 			return ResponseEntity
 					.status(HttpStatus.OK)
 					.header(HttpHeaders.SET_COOKIE, responseCookie.toString())
