@@ -139,4 +139,17 @@ public class OrderPageController {
 		model.addAttribute("ordersno", ordersno);
 		return "order/popup/orders_nc_stock_write";
 	}
+
+	/**
+	 * Elasticsearch를 이용한 검색
+	 * @param model
+	 * @return
+	 */
+	@GetMapping("/elasticsearch/list")
+	public String elasticsearchList(ModelMap model) {
+		model.addAttribute("stlist", codeService.findAllByUpCdId("ST", 2));
+		model.addAttribute("smlist", codeService.findAllByUpCdId("SM", 2));
+		model.addAttribute("cdmapper", codeService.findAllByUpCdId(new String[]{"ST","SM","SC"}, 2));
+		return "order/elasticsearch/order_list";
+	}
 }

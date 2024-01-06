@@ -2,16 +2,13 @@ package com.jewelry.order.dto;
 
 import com.jewelry.common.domain.CommonVO;
 import com.querydsl.core.annotations.QueryProjection;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+@RequiredArgsConstructor
 public class OrderResponseDto extends CommonVO {
   private Long orderNo;
   private String orderType;
