@@ -29,7 +29,7 @@
             <input type="date" id="searchEddt" class="form-control mlr5"/>
             <input type="number" id="recordCount" class="form-control mlr5" placeholder="행 개수" min="1" max="100" oninput="fncCheckZero(this);" style="width:100px;"/>
             <input type="text" id="searchWord" class="form-control mlr5" placeholder="고객명/모델번호/제조사 입력" style="width: auto;" />
-            <button type="button" onclick="fncSearch(0);" class="btn btn-secondary">
+            <button type="button" onclick="fncSearch(); return false;" class="btn btn-secondary">
               <span aria-hidden="true" class="glyphicon glyphicon-search">검색</span>
             </button>
             <a href="javascript: void(0);" onclick="fncRefresh(); return false;" class="btn btn-warning waves-effect waves-light mlr5">새로고침</a>
@@ -100,7 +100,7 @@
       function addEnterSearchEvent() {
         document.getElementById('searchWord').addEventListener('keyup', (e) => {
           if (e.keyCode === 13) {
-            findAll(0);
+            fncSearch();
           }
         });
       }
@@ -144,7 +144,7 @@
         document.querySelector('.pagination').innerHTML = html;
       }
 
-      function fncSearch(page){
+      function fncSearch(){
         const form = document.getElementById('searchForm');
         let searchWord = form.searchWord.value;
         if(searchWord.length < 2){
@@ -152,7 +152,7 @@
           return false;
         }
 
-        findAll(page);
+        findAll(0);
       }
 
       /**
@@ -239,11 +239,6 @@
             else {
               removeAuthButton('remove-auth1');
             }
-          }
-          if(!form.searchWord.value){
-            document.getElementById('list').innerHTML = '<td colspan="14" class="text-center">검색어를 입력해주세요.</td>';
-            drawPages();
-            return false;
           }
 
           if (!Object.keys(response).length || response.list == null || response.list.length == 0) {

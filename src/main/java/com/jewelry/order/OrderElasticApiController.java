@@ -20,6 +20,7 @@ public class OrderElasticApiController {
   private final OrderElasticsearchService orderElasticsearchService;
   private final JwtTokenProvider jwtTokenProvider;
   private final String menuId = "order";
+
   @GetMapping("/list")
   public Map<String, Object> list(
       @RequestHeader("Authorization") String accessToken,

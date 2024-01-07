@@ -28,7 +28,7 @@ public class Menu {
   private String inptId;
   private LocalDateTime inptDt = LocalDateTime.now();
   private String updtId;
-  private LocalDateTime updtDT;
+  private LocalDateTime updtDt;
 
   @OneToMany(mappedBy = "menu")
   private List<MenuAuth> menuAuths = new ArrayList<>();

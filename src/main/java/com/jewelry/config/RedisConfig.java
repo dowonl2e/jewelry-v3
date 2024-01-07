@@ -20,25 +20,25 @@ public class RedisConfig {
   @Value("${spring.redis.port}")
   private int redisPort;
 
-//  @Value("${spring.redis.password}")
-//  private String redisPassword;
+  @Value("${spring.redis.password}")
+  private String redisPassword;
 
   /**
    * RedisTemplate을 이용한 방식 RedisConnectionFactory 인터페이스를 통해 LettuceConnectionFactory를 생성하여 반환
    */
-//  @Bean
-//  public RedisConnectionFactory redisConnectionFactory() {
-//    final RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-//    redisStandaloneConfiguration.setHostName(redisHost);
-//    redisStandaloneConfiguration.setPort(Integer.parseInt(redisPort));
-//    redisStandaloneConfiguration.setPassword(redisPassword);
-//    return new LettuceConnectionFactory(redisStandaloneConfiguration);
-//  }
-
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
-    return new LettuceConnectionFactory(redisHost, redisPort);
+    final RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+    redisStandaloneConfiguration.setHostName(redisHost);
+    redisStandaloneConfiguration.setPort(redisPort);
+    redisStandaloneConfiguration.setPassword(redisPassword);
+    return new LettuceConnectionFactory(redisStandaloneConfiguration);
   }
+
+//  @Bean
+//  public RedisConnectionFactory redisConnectionFactory() {
+//    return new LettuceConnectionFactory(redisHost, redisPort);
+//  }
 
 
   /**
@@ -46,14 +46,14 @@ public class RedisConfig {
    * setKeySerializer, setValueSerializer 설정
    * redis-cli을 통해 직접 데이터를 조회 시 알아볼 수 없는 형태로 출력되는 것을 방지
    */
-  @Bean
-  public RedisTemplate<String, String> redisTemplate() {
-    RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
-
-    redisTemplate.setKeySerializer(new StringRedisSerializer());
-    redisTemplate.setValueSerializer(new StringRedisSerializer());
-    redisTemplate.setConnectionFactory(redisConnectionFactory());
-
-    return redisTemplate;
-  }
+//  @Bean
+//  public RedisTemplate<String, String> redisTemplate() {
+//    RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
+//
+//    redisTemplate.setKeySerializer(new StringRedisSerializer());
+//    redisTemplate.setValueSerializer(new StringRedisSerializer());
+//    redisTemplate.setConnectionFactory(redisConnectionFactory());
+//
+//    return redisTemplate;
+//  }
 }

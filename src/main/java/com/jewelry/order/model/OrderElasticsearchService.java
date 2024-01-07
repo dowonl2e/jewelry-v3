@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -23,6 +24,7 @@ import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Order;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -41,43 +44,42 @@ public class OrderElasticsearchService {
   @MenuAuthAnt
   public Map<String, Object> findAll(final SearchDto searchDto, final Pageable pageable){
     Map<String, Object> response = new HashMap<>();
-    if(ObjectUtils.isEmpty(searchDto.getSearchWord())){
-      return response;
-    }
+
+    QueryBuilder queryBuilder = null;
 
     FieldSortBuilder sortBuilder = SortBuilders.fieldSort("order_no").order(SortOrder.DESC);
-    MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(
-        searchDto.getSearchWord()
-        , "model_id.ngram", "customer_nm.ngram", "vender_nm.ngram"
-    );
+
+    if(!ObjectUtils.isEmpty(searchDto.getSearchWord())) {
+      queryBuilder = QueryBuilders.multiMatchQuery(
+          searchDto.getSearchWord()
+          , "model_id.ngram", "customer_nm.ngram", "vender_nm.ngram"
+      );
+    }
 
     NativeSearchQuery nativeSearchQuery = new NativeSearchQueryBuilder()
-        .withQuery(multiMatchQueryBuilder)
+        .withQuery(queryBuilder)
         .withPageable(pageable)
         .withSort(sortBuilder)
         .build();
 
-    SearchHits<OrderSearchDoc> orders = elasticsearchOperations.search(nativeSearchQuery, OrderSearchDoc.class);
+    SearchHits<OrderSearchDoc> searchHits = elasticsearchOperations.search(nativeSearchQuery, OrderSearchDoc.class);
     Page<SearchHit<OrderSearchDoc>> orderPage = SearchHitSupport.searchPageFor(
-        orders, pageable
+        searchHits, pageable
     );
 
-    List<OrderResponseDto> content = new ArrayList<>();
-    if(orders != null){
-      List<SearchHit<OrderSearchDoc>> hits = orders.getSearchHits();
-      if(hits != null){
-        for(SearchHit<OrderSearchDoc> hit : hits){
-          content.add(hit.getContent().toResponse());
-        }
-      }
-    }
+    List<OrderSearchDoc> docs = searchHits.stream()
+        .map(SearchHit::getContent)
+        .collect(Collectors.toList());
 
     searchDto.setTotalPage(orderPage.getTotalPages());
     searchDto.setHasPrev(orderPage.hasPrevious());
     searchDto.setHasNext(orderPage.hasNext());
     searchDto.setTotalCount(orderPage.getTotalElements());
 
-    response.put("list", content);
+    response.put("list", docs.stream()
+        .map(m -> m.toResponse())
+        .collect(Collectors.toList())
+    );
     response.put("params", searchDto);
 
     return response;
