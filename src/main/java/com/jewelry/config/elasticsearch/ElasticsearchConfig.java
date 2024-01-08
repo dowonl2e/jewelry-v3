@@ -38,8 +38,8 @@ public class ElasticsearchConfig extends AbstractElasticsearchConfiguration {
   /**
    * Elasticsearch Rest Template 빈 등록
    */
-  @Bean
-  public ElasticsearchOperations elasticsearchOperations(){
-    return new ElasticsearchRestTemplate(elasticsearchClient());
-  }
+//  @Bean
+//  public ElasticsearchOperations elasticsearchOperations(){
+//    return new ElasticsearchRestTemplate(elasticsearchClient());
+//  }
 }
