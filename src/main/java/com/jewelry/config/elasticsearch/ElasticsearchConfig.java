@@ -10,7 +10,7 @@ import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfig
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 
-@Configuration
+//@Configuration
 public class ElasticsearchConfig extends AbstractElasticsearchConfiguration {
 
   @Value("${spring.elasticsearch.host}")
