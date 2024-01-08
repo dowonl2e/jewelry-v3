@@ -176,7 +176,7 @@ public class OrderService {
         break;
       }
     }
-    System.out.println("멀티1 : " + multiInsertCheck);
+
     if(multiInsertCheck == true || quantityArr[0] > 1) {
       if(ObjectUtils.isEmpty(fileDto.getOriginNm())) {
         FileResponseDto fileResponseDto = fileRepositoryImpl.getFileByRef(
