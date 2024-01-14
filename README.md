@@ -17,7 +17,7 @@ Jewelry Management System With JPA & QueryDSL
 
 ### Back-End
 - Program Languages : Java 17
-- Framework / Library : Spring Boot, Spring Security, Spring Data JPA, QueryDSL, Docker, JWT(Json Web Token)
+- Framework / Library : Spring Boot, Spring Security, Spring Data JPA, QueryDSL, Docker, JWT(Json Web Token), Elasticsearch
 - Build Tool : Gradle
 - Database : MySQL 8.0
 
