@@ -3381,6 +3381,14 @@ input[type="button"].btn-block {
   text-align: center;
 }
 
+.input-group2 {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    width: 100%;
+}
+
 .input-group > .form-control,
 .input-group > .form-control-plaintext,
 .input-group > .custom-select,
@@ -9141,6 +9149,7 @@ button.bg-dark:focus {
   .my-lg-n2 {
     margin-top: -0.5rem !important;
   }
+
   .mr-lg-n2,
   .mx-lg-n2 {
     margin-right: -0.5rem !important;

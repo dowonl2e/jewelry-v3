@@ -38,7 +38,26 @@
           <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
             <i class="fa fa-bars"></i>
           </button>
-          <h6 class="m-0 font-weight-bold text-primary" id="menuname-h6"></h6>
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="searchDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <form class="d-none d-sm-inline-block form-inline mr-auto my-2 my-md-0 mw-100 navbar-search" style="float:left;">
+                  <div class="input-group2">
+                    <input type="text" class="form-control bg-light border-0 small" id="integration-search-input" style="width:90%;">
+                    <div class="input-group-append">
+                      <button class="btn btn-primary" type="button" id="integration-search-btn" onclick="fncIntegerationSearchSubmit(); return false;">
+                        <i class="fas fa-search fa-sm"></i>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </a>
+              <!-- Dropdown - User Information -->
+              <div id="search_list_div" class="dropdown-menu dropdown-menu-right shadow animated--grow-in mt-md-n2" style="width:100%">
+
+              </div>
+            </li>
+          </ul>
 
           <!-- Topbar Navbar -->
           <ul class="navbar-nav ml-auto">
@@ -50,20 +69,17 @@
                 <i class="fas fa-search fa-fw"></i>
               </a>
               <!-- Dropdown - Messages -->
-              <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in"
-                   aria-labelledby="searchDropdown">
-                <form class="form-inline mr-auto w-100 navbar-search">
+              <div class="dropdown-menu dropdown-menu-right p-3 shadow animated--grow-in">
+                <div class="form-inline mr-auto w-100 navbar-search">
                   <div class="input-group">
-                    <input type="text" class="form-control bg-light border-0 small"
-                           placeholder="Search for..." aria-label="Search"
-                           aria-describedby="basic-addon2">
+                    <input type="text" class="form-control bg-light border-0 small" aria-label="Search" aria-describedby="basic-addon2">
                     <div class="input-group-append">
                       <button class="btn btn-primary" type="button">
                         <i class="fas fa-search fa-sm"></i>
                       </button>
                     </div>
                   </div>
-                </form>
+                </div>
               </div>
             </li>
 
@@ -74,6 +90,7 @@
                 <span class="mr-2 d-none d-lg-inline text-gray-600 small" id="user-name"></span>
                 <img class="img-profile rounded-circle" id="user-profile-img" alt="프로필 이미지" src="/img/undraw_profile.svg">
               </a>
+
               <!-- Dropdown - User Information -->
               <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
                 <a href="/member/profile" class="dropdown-item">
@@ -132,16 +149,76 @@
   <script th:inline="javascript">
     const uri = /*[[ ${#httpServletRequest.servletPath} ]]*/;
     const uri2 = uri.substring(1, uri.length);
-
+    var isSearching = false;
     $(document).ready(function(){
       init();
+      addEnterIntegerationSearchEvent();
+
+      $("#integration-search-input").on('focus change keyup', function(e) {
+        if(isSearching){
+          return false;
+        }
+
+        if($(this).val().length == 0){
+          $("#search_list_div").children().remove();
+          $("#search_list_div").removeClass("show");
+          return false;
+        }
+
+        var params = {
+          keyword: $(this).val()
+        }
+        checkListNullParams(params);
+        isSearching = true;
+        getJson('/api/main/integration/search', params).then(response => {
+          let html = ``;
+          if (!Object.keys(response).length || response.list == null || response.list.length == 0) {
+            html += `
+              <a href="javascript:void(0)" class="dropdown-item text-center">검색 결과가 없습니다.</a>
+            `;
+          }
+          else {
+            response.list.forEach((obj, idx) => {
+              menu_link = checkNullVal(obj.menu_link);
+              menu_name = checkNullVal(obj.menu_name);
+              message = checkNullVal(obj.message);
+              html += `
+                <a href="`+menu_link+`?searchWord=`+$(this).val()+`" class="dropdown-item" id="search_item_link_`+idx+`">
+                  <i class="fas fa-search fa-sm"></i> <span class="ml-2 m-0 font-weight-bold text-primary">`+menu_name+`</span> <span class="ml-3">`+message+`</span>
+                </a>
+              `;
+            });
+          }
+          $("#search_list_div").addClass("show");
+          $("#search_list_div").html(html);
+          isSearching = false;
+        });
+      });
 		});
+
+    function fncIntegerationSearchSubmit(){
+      if($("#search_item_link_0").length > 0){
+        let menu_link = $("#search_item_link_0").attr('href');
+        location.href = menu_link;
+      }
+      else {
+        return false;
+      }
+    }
 
     async function init(){
       if(await isValidToken()){
         findMyInfo();
         findMenu();
       }
+    }
+
+    function addEnterIntegerationSearchEvent() {
+      document.getElementById('integration-search-input').addEventListener('keyup', (e) => {
+        if (e.keyCode === 13) {
+          fncIntegerationSearchSubmit();
+        }
+      });
     }
 
     function findMyInfo(){
