@@ -28,9 +28,9 @@ public class MenuAuthRepositoryImpl implements MenuAuthRepositoryCustom {
             , menuAuth.modifyAuth, menuAuth.removeAuth, menuAuth.inptId
             , menuAuth.inptDt)
         )
-        .from(menuAuth)
-        .leftJoin(menuAuth.menu, menu)
-        .where(menuAuth.userId.eq(userId))
+        .from(menu)
+        .leftJoin(menu.menuAuths, menuAuth)
+        .on(menuAuth.userId.eq(userId))
         .orderBy(menu.menuOrd.asc())
         .fetch();
   }
