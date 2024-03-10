@@ -38,26 +38,6 @@
           <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
             <i class="fa fa-bars"></i>
           </button>
-          <ul class="navbar-nav ml-auto">
-            <li class="nav-item dropdown no-arrow">
-              <a class="nav-link dropdown-toggle" href="#" id="searchDropdown2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <form class="d-none d-sm-inline-block form-inline mr-auto my-2 my-md-0 mw-100 navbar-search" style="float:left;">
-                  <div class="input-group2">
-                    <input type="text" class="form-control bg-light border-0 small" id="integration-search-input" style="width:90%;">
-                    <div class="input-group-append">
-                      <button class="btn btn-primary" type="button" id="integration-search-btn" onclick="fncIntegerationSearchSubmit(); return false;">
-                        <i class="fas fa-search fa-sm"></i>
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </a>
-              <!-- Dropdown - User Information -->
-              <div id="search_list_div" class="dropdown-menu dropdown-menu-right shadow animated--grow-in mt-md-n2" style="width:100%">
-
-              </div>
-            </li>
-          </ul>
 
           <!-- Topbar Navbar -->
           <ul class="navbar-nav ml-auto">
@@ -152,7 +132,6 @@
     var isSearching = false;
     $(document).ready(function(){
       init();
-      addEnterIntegerationSearchEvent();
 
       $("#integration-search-input").on('focus change keyup', function(e) {
         if(isSearching){
@@ -196,29 +175,11 @@
       });
 		});
 
-    function fncIntegerationSearchSubmit(){
-      if($("#search_item_link_0").length > 0){
-        let menu_link = $("#search_item_link_0").attr('href');
-        location.href = menu_link;
-      }
-      else {
-        return false;
-      }
-    }
-
     async function init(){
       if(await isValidToken()){
         findMyInfo();
         findMenu();
       }
-    }
-
-    function addEnterIntegerationSearchEvent() {
-      document.getElementById('integration-search-input').addEventListener('keyup', (e) => {
-        if (e.keyCode === 13) {
-          fncIntegerationSearchSubmit();
-        }
-      });
     }
 
     function findMyInfo(){
