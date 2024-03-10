@@ -16,15 +16,15 @@
 
 	<!-- Logger -->
 	
-	<logger name="com.jewelry" level="DEBUG" appender-ref="console" />
+	<logger name="com.jewelry" level="ERROR" appender-ref="console" />
 	
-	<logger name="jdbc" level="DEBUG" />
-  	<logger name="jdbc.sqlonly" level="DEBUG" />
+	<logger name="jdbc" level="OFF" />
+  	<logger name="jdbc.sqlonly" level="OFF" />
   	<logger name="jdbc.audit" level="OFF" />
   	<logger name="jdbc.resultset" level="OFF" />
   	<logger name="jdbc.connection" level="OFF" />
   	<logger name="jdbc.sqltiming" level="DEBUG" />
-  	<logger name="jdbc.resultsettable" level="DEBUG" />
+  	<logger name="jdbc.resultsettable" level="OFF" />
   
 	<!-- Root Logger -->
 	<root level="ERROR">
