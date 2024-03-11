@@ -3,7 +3,6 @@ Jewelry Management System With JPA & QueryDSL
 
 ## 업데이트 내용
 - SQLMapper 방식에서 JPA & QueryDSL로 변경
-- Elasticsearch 통합 검색 기능 추가
 
 ## 기간
 2023.09.01 ~ 2024.01.13
